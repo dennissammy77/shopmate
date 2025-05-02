@@ -42,3 +42,29 @@ Emails must be unique
   "updatedAt": "2025-05-02T08:00:00.000Z"
 }
 ```
+
+## Get Authenticated user
+**Endpoint:**  
+`GET /api/users/me`  
+
+**Headers:**
+`Authorization: Bearer JWT_TOKEN_HERE`
+```json
+{
+  "user": {
+    "id": "USER_ID",
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "householdId": "HOUSEHOLD_ID",
+    "preferences": {
+      "prediction_opt_in": true,
+      "preferred_brands": ["BrandX"]
+    }
+  }
+}
+```
+Status Codes:
+
+`200 OK – Returns authenticated user`
+
+`401 Unauthorized – Missing or invalid token`
