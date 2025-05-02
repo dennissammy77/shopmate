@@ -10,6 +10,9 @@ dotenv.config();
 db.connect();
 // middlewares
 // controllers
+const authRoutes = require('./controllers/auth.controller.js');
+const protectedRoutes = require('./controllers/protected.controller.js');
+
 
 app.use(express.json());
 
@@ -23,6 +26,9 @@ app.get('/',(req,res)=>{
     return res.send('Hello World!!')
 })
 
-/**************************NAVIGATION********************************/
+/**************************ROUTES********************************/
+app.use('/api/auth', authRoutes);
+app.use('/api/protected', protectedRoutes);
+
 
 module.exports = app;
