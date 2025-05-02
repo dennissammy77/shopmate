@@ -91,3 +91,28 @@ Error Responses
 `401 Unauthorized`: Missing or invalid token
 
 `500 Server Error`: Internal error
+
+## Delete Current User's Household
+
+**Endpoint:** `DELETE /api/households/me`  
+**Auth Required:** Yes (Bearer Token)
+
+### Headers
+Authorization: Bearer JWT_TOKEN_HERE
+
+### 📥 Request Body
+None
+
+### ✅ Success Response
+**Status:** `200 OK`
+```json
+    {
+      "message": "Household deleted successfully"
+    }
+```
+Error Responses
+`404 Not Found`: Household not assigned or already deleted
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
