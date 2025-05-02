@@ -9,7 +9,7 @@ dotenv.config();
 // initialize the db
 db.connect();
 // middlewares
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('./middlewares/authMiddleware.js');
 // controllers
 const authRoutes = require('./controllers/auth.controller.js');
 const userRoutes = require('./controllers/user.controller.js');
