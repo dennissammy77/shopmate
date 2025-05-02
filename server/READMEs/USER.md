@@ -68,3 +68,43 @@ Status Codes:
 `200 OK – Returns authenticated user`
 
 `401 Unauthorized – Missing or invalid token`
+
+### Update Authenticated User
+
+**Endpoint:**  
+`PATCH /api/users/me`  
+
+**Headers:**
+`Authorization: Bearer JWT_TOKEN_HERE`
+
+**Body Parameters:**
+```json
+{
+  "name": "New Name",
+  "preferences": {
+    "prediction_opt_in": false,
+    "preferred_brands": ["BrandA", "BrandB"]
+  }
+}
+```
+Success Response:
+```json
+{
+  "user": {
+    "id": "USER_ID",
+    "name": "New Name",
+    "email": "janedoe@example.com",
+    "preferences": {
+      "prediction_opt_in": false,
+      "preferred_brands": ["BrandA", "BrandB"]
+    }
+  }
+}
+```
+Status Codes:
+
+`200 OK – Update successful`
+
+`401 Unauthorized – No or invalid token`
+
+`500 Server Error – Unexpected issues`

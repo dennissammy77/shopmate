@@ -30,7 +30,7 @@ app.get('/',(req,res)=>{
 
 /**************************ROUTES********************************/
 app.use('/api/auth', authRoutes);
-app.use('/api/user', authMiddleware, userRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/protected', protectedRoutes);
 
 
