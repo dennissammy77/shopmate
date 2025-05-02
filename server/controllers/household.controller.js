@@ -75,5 +75,27 @@ router.delete('/me', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.put('/me', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const user = await User.findById(req.user.id);
 
+    if (!user.householdId) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    const household = await Household.findById(user.householdId);
+    if (!household) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    if (name) household.name = name;
+
+    await household.save();
+
+    res.status(200).json({ message: 'Household updated', household });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = router;
