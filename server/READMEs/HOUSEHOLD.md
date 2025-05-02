@@ -92,6 +92,38 @@ Error Responses
 
 `500 Server Error`: Internal error
 
+## Update Current User's Household
+
+**Endpoint:** `PUT /api/households/me`  
+**Auth Required:** Yes (Bearer Token)
+
+### 🔐 Headers
+Authorization: Bearer JWT_TOKEN_HERE
+```json
+{
+  "name": "Updated Household Name"
+}
+```
+Success Response
+Status: `200 OK`
+```json
+    {
+      "message": "Household updated",
+      "household": {
+        "_id": "household_id",
+        "name": "Updated Household Name",
+        "members": ["user_id1"],
+        "createdAt": "...",
+        "__v": 0
+      }
+    }
+```
+Error Responses
+`404 Not Found`: Household not found
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
 ## Delete Current User's Household
 
 **Endpoint:** `DELETE /api/households/me`  
