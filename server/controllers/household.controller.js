@@ -27,4 +27,23 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/me', async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.householdId) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    const household = await Household.findById(user.householdId).populate('members', 'name email');
+
+    if (!household) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    res.status(200).json(household);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
