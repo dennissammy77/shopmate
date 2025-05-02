@@ -37,7 +37,7 @@ This model will allow users to belong to shared shopping groups and later power 
 `Authorization: Bearer JWT_TOKEN_HERE`
 `Content-Type: application/json`
 
-### 📤 Request Body
+### Request Body
 ```json
     {
       "name": "My Household Name"
@@ -56,6 +56,37 @@ Success Response
 ```
 Error Responses
 `400 Bad Request`: Household name is missing
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
+
+## Get Current User's Household
+
+**Endpoint:** `GET /api/households/me`  
+`Authorization: Bearer JWT_TOKEN_HERE`
+### 📥 Request Body
+None
+
+### ✅ Success Response
+**Status:** `200 OK`
+```json
+{
+  "_id": "household_id",
+  "name": "Fetch Household",
+  "members": [
+    {
+      "_id": "user_id",
+      "name": "Fetch User",
+      "email": "fetch@example.com"
+    }
+  ],
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+Error Responses
+`404 Not Found`: Household not assigned or doesn't exist
 
 `401 Unauthorized`: Missing or invalid token
 
