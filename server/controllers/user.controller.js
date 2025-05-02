@@ -31,4 +31,13 @@ router.put('/me', async (req, res) => {
   }
 });
 
+router.delete('/me', async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.user.id);
+    res.json({ message: 'User account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
