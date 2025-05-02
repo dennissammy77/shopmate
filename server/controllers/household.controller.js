@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user.model.js');
 const Household = require('../models/household.model.js');
+const LOGGER = require("../lib/LOGGER.lib.js");
 
 router.post('/', async (req, res) => {
   try {
@@ -23,6 +24,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).json(household);
   } catch (err) {
+    LOGGER.log('error',`Error while creating household!\n${err}`);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -42,6 +44,34 @@ router.get('/me', async (req, res) => {
 
     res.status(200).json(household);
   } catch (err) {
+    LOGGER.log('error',`Error while getting household details!\n${err}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.delete('/me', async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.householdId) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    const household = await Household.findById(user.householdId);
+    if (!household) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    // Remove householdId from all members
+    await User.updateMany(
+      { _id: { $in: household.members } },
+      { $unset: { householdId: "" } }
+    );
+
+    await Household.findByIdAndDelete(user.householdId);
+
+    res.status(200).json({ message: 'Household deleted successfully' });
+  } catch (err) {
+    LOGGER.log('error',`Error while deleting household!\n${err}`);
     res.status(500).json({ message: 'Server error' });
   }
 });
