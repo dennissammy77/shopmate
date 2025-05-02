@@ -41,3 +41,47 @@ describe('POST /api/households', () => {
     expect(res.body.message).toBe('Household name is required');
   });
 });
+describe('GET /api/households/me', () => {
+  let token;
+
+  beforeAll(async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      name: 'Fetch User',
+      email: 'fetch@example.com',
+      password: 'Password123!'
+    });
+    token = res.body.token;
+
+    await request(app)
+      .post('/api/households')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Fetch Household' });
+  });
+
+  it('should return household details for the user', async () => {
+    const res = await request(app)
+      .get('/api/households/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.name).toBe('Fetch Household');
+    expect(res.body.members.length).toBeGreaterThan(0);
+  });
+
+  it('should return 404 if user has no household', async () => {
+    const res2 = await request(app).post('/api/auth/signup').send({
+      name: 'No Household User',
+      email: 'nohouse@example.com',
+      password: 'Password123!'
+    });
+
+    const noHouseToken = res2.body.token;
+
+    const res = await request(app)
+      .get('/api/households/me')
+      .set('Authorization', `Bearer ${noHouseToken}`);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe('Household not found');
+  });
+});
