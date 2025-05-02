@@ -85,3 +85,45 @@ describe('GET /api/households/me', () => {
     expect(res.body.message).toBe('Household not found');
   });
 });
+describe('DELETE /api/households/me', () => {
+  let token;
+
+  beforeAll(async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      name: 'Delete User',
+      email: 'delete@example.com',
+      password: 'Password123!'
+    });
+
+    token = res.body.token;
+
+    await request(app)
+      .post('/api/households')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Delete Household' });
+  });
+
+  it('should delete the user\'s household and remove links from users', async () => {
+    const res = await request(app)
+      .delete('/api/households/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe('Household deleted successfully');
+
+    const userRes = await request(app)
+      .get('/api/users/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(userRes.body.householdId).toBeNull();
+  });
+
+  it('should return 404 if household not found', async () => {
+    const res = await request(app)
+      .delete('/api/households/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe('Household not found');
+  });
+});
