@@ -108,3 +108,23 @@ Status Codes:
 `401 Unauthorized – No or invalid token`
 
 `500 Server Error – Unexpected issues`
+
+### Delete Authenticated User
+
+**Endpoint:**  
+`DELETE /api/users/me`
+
+**Headers:**
+`Authorization: Bearer JWT_TOKEN_HERE`
+**Success Response:**
+```json
+{
+  "message": "User account deleted successfully"
+}
+Status Codes:
+
+`200 OK – User deleted`
+
+`401 Unauthorized – Token missing or invalid`
+
+`500 Server Error – Unexpected error`
