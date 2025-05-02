@@ -9,8 +9,10 @@ dotenv.config();
 // initialize the db
 db.connect();
 // middlewares
+const authMiddleware = require('../middleware/auth');
 // controllers
 const authRoutes = require('./controllers/auth.controller.js');
+const userRoutes = require('./controllers/user.controller.js');
 const protectedRoutes = require('./controllers/protected.controller.js');
 
 
@@ -28,6 +30,7 @@ app.get('/',(req,res)=>{
 
 /**************************ROUTES********************************/
 app.use('/api/auth', authRoutes);
+app.use('/api/user', authMiddleware, userRoutes);
 app.use('/api/protected', protectedRoutes);
 
 
