@@ -151,3 +151,29 @@ describe('PUT /api/users/me', () => {
     expect(res.statusCode).toBe(401);
   });
 });
+describe('DELETE /api/users/me', () => {
+  let token;
+
+  beforeAll(async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      name: 'User To Delete',
+      email: 'deleteuser@example.com',
+      password: 'Password123!'
+    });
+    token = res.body.token;
+  });
+
+  it('should delete the authenticated user', async () => {
+    const res = await request(app)
+      .delete('/api/users/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe('User account deleted successfully');
+  });
+
+  it('should return 401 if no token provided', async () => {
+    const res = await request(app).delete('/api/users/me');
+    expect(res.statusCode).toBe(401);
+  });
+});
