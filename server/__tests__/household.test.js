@@ -170,3 +170,62 @@ describe('PUT /api/households/me', () => {
     expect(res.body.message).toBe('Household not found');
   });
 });
+describe('PATCH /api/households/members', () => {
+  let token, userToAdd, userToRemove;
+
+  beforeAll(async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      name: 'Member Admin',
+      email: 'memberadmin@example.com',
+      password: 'Password123!'
+    });
+
+    token = res.body.token;
+
+    // Create a household
+    await request(app)
+      .post('/api/households')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Household with Members' });
+
+    // Create two additional users
+    const addRes = await request(app).post('/api/auth/signup').send({
+      name: 'User Add',
+      email: 'useradd@example.com',
+      password: 'Password123!'
+    });
+
+    const removeRes = await request(app).post('/api/auth/signup').send({
+      name: 'User Remove',
+      email: 'userremove@example.com',
+      password: 'Password123!'
+    });
+
+    userToAdd = await User.findOne({ email: 'useradd@example.com' });
+    userToRemove = await User.findOne({ email: 'userremove@example.com' });
+
+    // Add the user to be removed into the household manually
+    const Household = require('../models/Household');
+    const user = await User.findById(removeRes.body.user._id);
+    const household = await Household.findById(user.householdId);
+    household.members.push(userToRemove._id);
+    await household.save();
+
+    user.householdId = household._id;
+    await user.save();
+  });
+
+  it('should add and remove members from the household', async () => {
+    const res = await request(app)
+      .patch('/api/households/members')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        add: [userToAdd._id],
+        remove: [userToRemove._id]
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.household.members).toContain(userToAdd._id.toString());
+    expect(res.body.household.members).not.toContain(userToRemove._id.toString());
+  });
+});
