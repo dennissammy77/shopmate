@@ -99,7 +99,7 @@ router.put('/me', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-router.patch('/members', auth, async (req, res) => {
+router.patch('/members', async (req, res) => {
   const { add = [], remove = [] } = req.body;
 
   try {
