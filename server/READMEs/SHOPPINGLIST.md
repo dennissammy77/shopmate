@@ -1,0 +1,82 @@
+# Shopping List Model
+This model will allow users to belong to shared shopping groups to create, list and manage shopping lists
+
+## Feature Scope: Shopping Lists
+Each household can have multiple shopping lists. Each shopping list contains:
+
+- A name (e.g. “Weekly Groceries”)
+
+- An optional description
+
+- An array of items (will be handled separately later)
+
+- A createdBy user reference
+
+- A reference to the householdId it belongs to
+
+- Timestamps
+- 
+`models/shoppingList.model.js`
+```json
+    {
+        "name": {
+            "type": "String",
+            "required": "true",
+        },
+        "description": "String",
+        "householdId": {
+            "type": "mongoose.Schema.Types.ObjectId",
+            "ref": "Household",
+            "required": true,
+        },
+        "createdBy": {
+            "type": "mongoose.Schema.Types.ObjectId",
+            "ref": "User",
+            "required": true,
+        },
+    },
+    { "timestamps": true }
+```
+
+## Relationships
+`Household` → References a document in the household collection
+`User` → References a document in the user collection
+
+## Create Shopping list
+
+**Endpoint:** `POST /api/shopping-lists`  
+**Auth Required:** Yes (Bearer Token)  
+
+### Headers
+`Authorization: Bearer JWT_TOKEN_HERE`
+`Content-Type: application/json`
+
+### Request Body
+```json
+    {
+      "name": "Weekly Groceries",
+      "description": "Our usual weekly items",
+      "householdId": "HOUSEHOLD_OBJECT_ID"
+    }
+```
+Success Response
+`Status: 201 Created`
+```json
+    {
+        "name": "Weekly List",
+        "description": "Groceries for the week",
+        "householdId": "68154187a401c2c191a554a9",
+        "createdBy": "68153ae0192a166548dd4039",
+        "_id": "6815b3c89a3fbe2eafa6cca8",
+        "createdAt": "2025-05-03T06:12:24.529Z",
+        "updatedAt": "2025-05-03T06:12:24.529Z",
+        "__v": 0
+    }
+```
+Error Responses
+`400 Bad Request`: Household name is missing
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
+
