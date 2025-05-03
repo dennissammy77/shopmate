@@ -14,6 +14,7 @@ const authMiddleware = require('./middlewares/authMiddleware.js');
 const authRoutes = require('./controllers/auth.controller.js');
 const userRoutes = require('./controllers/user.controller.js');
 const householdsRoutes = require('./controllers/household.controller.js');
+const shoppinglistRoutes = require('./controllers/shoppingList.controller.js');
 const protectedRoutes = require('./controllers/protected.controller.js');
 
 
@@ -34,6 +35,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/households', authMiddleware, householdsRoutes);
 app.use('/api/protected', protectedRoutes);
-
+app.use('/api/shopping-lists', authMiddleware, shoppinglistRoutes);
 
 module.exports = app;
