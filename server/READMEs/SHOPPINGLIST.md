@@ -112,3 +112,27 @@ Error Responses
 `401 Unauthorized`: Missing or invalid token
 
 `500 Server Error`: Internal error
+
+## Get a Specific Shopping List
+Endpoint:
+`GET /api/shopping-lists/list/:id`
+Returns one shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes        | Shopping List ID |
+Sample Response:
+```json
+    {
+      "_id": "66400456d8a31c001e3a4f2a",
+      "name": "Target List",
+      "description": "Shopping at Target",
+      "householdId": "664001f92d8d50a1e25bcb3c",
+      "createdAt": "2025-05-02T21:10:00.000Z"
+    }
+```
+Errors:
+`404 - Not found`
+
+`500 - Server error`
