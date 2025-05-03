@@ -74,3 +74,38 @@ describe('GET /api/shopping-lists', () => {
     expect(res.body.length).toBeGreaterThan(0);
   });
 });
+describe('GET /api/shopping-lists', () => {
+  let token, user, household;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI);
+    user = await User.create({ email: 'test@example.com', passwordHash: 'hash', name: 'Test User' });
+    household = await Household.create({ name: 'Test Home', members: [user._id] });
+    token = generateToken(user._id);
+  });
+
+  afterAll(async () => {
+    await User.deleteMany();
+    await Household.deleteMany();
+    await ShoppingList.deleteMany();
+    await mongoose.disconnect();
+  });
+  
+  it('should fetch a specific shopping list by ID', async () => {
+    const newList = await request(app)
+      .post('/api/shopping-lists')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Target List',
+        description: 'Shopping at Target',
+        householdId: household._id,
+      });
+  
+    const res = await request(app)
+      .get(`/api/shopping-lists/list/${newList.body._id}`)
+      .set('Authorization', `Bearer ${token}`);
+  
+    expect(res.statusCode).toBe(200);
+    expect(res.body.name).toBe('Target List');
+  });  
+});
