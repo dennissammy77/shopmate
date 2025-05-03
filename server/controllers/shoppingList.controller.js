@@ -21,4 +21,17 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.get('/:householdId', async (req, res) => {
+  try {
+    const { householdId } = req.params;
+
+    const lists = await ShoppingList.find({ householdId }).sort({ createdAt: -1 });
+
+    res.status(200).json(lists);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch shopping lists' });
+  }
+});
+
 module.exports = router
