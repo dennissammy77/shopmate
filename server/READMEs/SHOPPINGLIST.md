@@ -80,3 +80,35 @@ Error Responses
 
 `500 Server Error`: Internal error
 
+## Get All Shopping Lists for a Household
+Endpoint:
+`GET /api/shopping-lists/:householdId`
+Auth required: Yes (Bearer Token)
+
+Description:
+Returns all shopping lists that belong to the specified household.
+Request Headers:
+`Authorization: Bearer <your_token>`
+URL Params:
+| Param         | Type     | Required | Description             |
+| ------------- | -------- | -------- | ----------------------- |
+| `householdId` | ObjectId | Yes      | The ID of the household |
+Success Response
+`Status: 200 Created`
+```json
+    [
+      {
+        "_id": "66400456d8a31c001e3a4f2a",
+        "name": "Weekly Groceries",
+        "description": "Basic weekly shopping",
+        "householdId": "664001f92d8d50a1e25bcb3c",
+        "createdBy": "663ff20e1a3b54001ee2e938",
+        "createdAt": "2025-05-02T20:40:00.000Z",
+        "__v": 0
+      }
+    ]
+```
+Error Responses
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
