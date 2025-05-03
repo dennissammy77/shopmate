@@ -37,3 +37,40 @@ describe('POST /api/shopping-lists', () => {
     expect(res.body.name).toBe('Weekly List');
   });
 });
+describe('GET /api/shopping-lists', () => {
+  let token, user, household;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI);
+    user = await User.create({ email: 'test@example.com', passwordHash: 'hash', name: 'Test User' });
+    household = await Household.create({ name: 'Test Home', members: [user._id] });
+    token = generateToken(user._id);
+  });
+
+  afterAll(async () => {
+    await User.deleteMany();
+    await Household.deleteMany();
+    await ShoppingList.deleteMany();
+    await mongoose.disconnect();
+  });
+  
+  it('should fetch all shopping lists for a household', async () => {
+    // Create one list to ensure it exists
+    await request(app)
+      .post('/api/shopping-lists')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Midweek List',
+        description: 'Extra groceries',
+        householdId: household._id,
+      });
+  
+    const res = await request(app)
+      .get(`/api/shopping-lists/${household._id}`)
+      .set('Authorization', `Bearer ${token}`);
+  
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+  });
+});
