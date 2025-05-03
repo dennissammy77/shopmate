@@ -148,3 +148,39 @@ Error Responses
 `401 Unauthorized`: Missing or invalid token
 
 `500 Server Error`: Internal error
+
+## Update Household Members
+
+**Endpoint:** `PATCH /api/households/members`  
+**Auth Required:** Yes (Bearer Token)
+
+### 🔐 Headers
+`Authorization: Bearer JWT_TOKEN_HERE`
+### Request Body
+```json
+{
+  "add": ["userId1", "userId2"],
+  "remove": ["userId3"]
+}
+```
+`add`: array of user IDs to add to household.
+
+`remove`: array of user IDs to remove from household.
+Success Response
+Status: `200 OK`
+
+```json
+    {
+      "message": "Household members updated",
+      "household": {
+        "_id": "householdId",
+        "name": "Household Name",
+        "members": ["userId1", "userId2"],
+        ...
+      }
+    }
+```
+Error Responses
+`404 Not Found`: Household not found
+
+`500 Server Error`: Unexpected issue
