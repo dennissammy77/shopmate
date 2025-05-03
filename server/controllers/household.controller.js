@@ -95,6 +95,44 @@ router.put('/me', async (req, res) => {
 
     res.status(200).json({ message: 'Household updated', household });
   } catch (err) {
+    LOGGER.log('error',`Error while updating household!\n${err}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+router.patch('/members', auth, async (req, res) => {
+  const { add = [], remove = [] } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    const household = await Household.findById(user.householdId);
+
+    if (!household) return res.status(404).json({ message: 'Household not found' });
+
+    // Add members
+    for (const userId of add) {
+      const member = await User.findById(userId);
+      if (member && !household.members.includes(member._id)) {
+        household.members.push(member._id);
+        member.householdId = household._id;
+        await member.save();
+      }
+    }
+
+    // Remove members
+    for (const userId of remove) {
+      household.members = household.members.filter(id => id.toString() !== userId);
+      const member = await User.findById(userId);
+      if (member) {
+        member.householdId = null;
+        await member.save();
+      }
+    }
+
+    await household.save();
+
+    res.status(200).json({ message: 'Household members updated', household });
+  } catch (err) {
+    LOGGER.log('error',`Error while managing members in household!\n${err}`);
     res.status(500).json({ message: 'Server error' });
   }
 });
