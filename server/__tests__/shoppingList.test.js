@@ -144,3 +144,44 @@ describe('DELETE /api/shopping-lists', () => {
     expect(res.body.name).toBe('Target List');
   });  
 });
+describe('POST /api/shopping-lists/list/:id/item/add', () => {
+  let token, user, household;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI);
+    user = await User.create({ email: 'test@example.com', passwordHash: 'hash', name: 'Test User' });
+    household = await Household.create({ name: 'Test Home', members: [user._id] });
+    token = generateToken(user._id);
+  });
+
+  afterAll(async () => {
+    await User.deleteMany();
+    await Household.deleteMany();
+    await ShoppingList.deleteMany();
+    await mongoose.disconnect();
+  });
+  
+  it('should add an item to the shopping list', async () => {
+    const newList = await request(app)
+      .post('/api/shopping-lists')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Target List',
+        description: 'Shopping at Target',
+        householdId: household._id,
+      });
+
+    const res = await request(app)
+      .post(`/api/shopping-lists/list/${newList.body._id}/item/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Milk',
+        quantity: 2,
+      });
+  
+    expect(res.statusCode).toBe(200);
+    expect(res.body.items.length).toBeGreaterThan(0);
+    expect(res.body.items[0].name).toBe('Milk');
+  });
+  
+});
