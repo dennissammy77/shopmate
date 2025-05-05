@@ -49,5 +49,21 @@ router.get('/list/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch shopping list' });
   }
 });
+router.delete('/list/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await ShoppingList.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Shopping list not found' });
+    }
+
+    res.status(200).json({ message: 'Shopping list deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete shopping list' });
+  }
+});
 
 module.exports = router
