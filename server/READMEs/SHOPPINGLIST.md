@@ -121,7 +121,7 @@ Headers:
 `Authorization: Bearer <your_token>`
 | Param | Type     | Required | Description      |
 | ----- | -------- | -------- | ---------------- |
-| id    | ObjectId | Yes        | Shopping List ID |
+| id    | ObjectId | Yes      | Shopping List ID |
 Sample Response:
 ```json
     {
@@ -150,6 +150,40 @@ Sample Response:
 ```json
     {
       "message": "Shopping list deleted successfully"
+    }
+```
+Errors:
+`404 - Shopping list not found`
+
+`500 - Server error`
+
+## Add Item to Shopping List
+Endpoint:
+`POST /api/shopping-lists/list/:id/item/add`
+Returns shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | Shopping List ID |
+### Request Body
+```json
+    {
+      "name": "Milk",
+      "quantity": "2",
+    }
+```
+Sample Response:
+```json
+    {
+      "_id": "list_id",
+      "items": [
+        {
+          "name": "Milk",
+          "quantity": 2,
+          ...
+        }
+      ]
     }
 ```
 Errors:
