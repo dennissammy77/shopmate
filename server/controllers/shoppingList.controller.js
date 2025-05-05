@@ -98,5 +98,34 @@ router.post('/list/:id/item/add', async (req, res) => {
     res.status(500).json({ error: 'Failed to add item to shopping list' });
   }
 });
+router.put('/list/:id/item/update', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { itemId, name, quantity, status } = req.body;
+
+    const list = await ShoppingList.findById(id);
+    if (!list) return res.status(404).json({ error: 'Shopping list not found' });
+
+    const item = list.items.id(itemId);
+    if (!item) return res.status(404).json({ error: 'Item not found in list' });
+
+    if (name) item.name = name;
+    if (quantity) item.quantity = quantity;
+    if (status) item.status = status;
+
+    item.history.push({
+      action: 'edit',
+      userId: req.user._id
+    });
+
+    list.updatedAt = new Date();
+    await list.save();
+
+    res.status(200).json(list);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
 
 module.exports = router;
