@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const LOGGER = require("../lib/LOGGER.lib.js");
-const ShoppingList = require('../models/ShoppingList.model.js');
+const ShoppingList = require('../models/shoppingList.model.js');
 
 router.post('/', async (req, res) => {
     try {
