@@ -292,3 +292,45 @@ Errors:
 `404 - Shopping list not found`
 
 `500 - Server error`
+
+## Update Item Price Info
+Endpoint:
+`PATCH /api/shopping-lists/list/:id/item/:itemId`
+Returns shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | Shopping List ID |
+| itemId| ObjectId | Yes      | ID of the item   |
+### Request Body
+| Field     | Type   | Required | Description             |
+| --------- | ------ | -------- | ----------------------- |
+| storeName | String | Yes      | Name of the store       |
+| price     | Number | Yes      | Price of the product    |
+| currency  | String | No       | Currency (default: USD) |
+
+Sample Response:
+```json
+  {
+    "message": "Price info updated",
+    "list": {
+      "_id": "...",
+      "items": [
+        {
+          "_id": "...",
+          "priceInfo": {
+            "storeName": "Walmart",
+            "price": 4.99,
+            "currency": "USD",
+            "lastChecked": "2025-05-02T20:00:00.000Z"
+          }
+        }
+      ]
+    }
+  }
+```
+Errors:
+`404 - Shopping list not found`
+
+`500 - Server error`
