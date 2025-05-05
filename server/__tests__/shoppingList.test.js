@@ -226,7 +226,7 @@ describe('PUT  /api/shopping-lists/list/:id/item/update', () => {
       .put(`/api/shopping-lists/list/${newList.body._id}/item/update`)
       .set('Authorization', `Bearer ${token}`)
       .send({
-        _id: itemId,
+        itemId,
         name: 'Almond Milk',
         quantity: 3
       });
@@ -235,6 +235,54 @@ describe('PUT  /api/shopping-lists/list/:id/item/update', () => {
     const updatedItem = res.body.items.find(i => i._id === itemId);
     expect(updatedItem.name).toBe('Almond Milk');
     expect(updatedItem.quantity).toBe(3);
+  });
+  
+});
+describe('PUT  /api/shopping-lists/list/:id/item/purchase', () => {
+  let token, user, household;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI);
+    user = await User.create({ email: 'test@example.com', passwordHash: 'hash', name: 'Test User' });
+    household = await Household.create({ name: 'Test Home', members: [user._id] });
+    token = generateToken(user._id);
+  });
+
+  afterAll(async () => {
+    await User.deleteMany();
+    await Household.deleteMany();
+    await ShoppingList.deleteMany();
+    await mongoose.disconnect();
+  });
+  
+  it('should update an item in the shopping list', async () => {
+    const newList = await request(app)
+      .post('/api/shopping-lists')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Target List',
+        description: 'Shopping at Target',
+        householdId: household._id,
+      });
+
+    const newItem = await request(app)
+      .post(`/api/shopping-lists/list/${newList.body._id}/item/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Milk',
+        quantity: 2,
+      });
+    
+    const itemId = newItem.body.items[0]._id
+  
+    const res = await request(app)
+      .put(`/api/shopping-lists/list/${newList.body._id}/item/purchase`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ itemId });
+  
+    expect(res.statusCode).toBe(200);
+    const updatedItem = res.body.items.find(i => i._id === itemId);
+    expect(updatedItem.status).toBe('purchased');
   });
   
 });
