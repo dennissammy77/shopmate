@@ -33,21 +33,21 @@ app.get('/',(req,res)=>{
 
 /**************************ROUTES********************************/
 // Protected routes group
-const protectedRouter = express.Router();
-protectedRouter.use(authMiddleware);
+// const protectedRouter = express.Router();
+// protectedRouter.use(authMiddleware);
 
-protectedRouter.use('/users', userRoutes);
-protectedRouter.use('/households', householdsRoutes);
-protectedRouter.use('/shopping-lists', shoppinglistRoutes);
-protectedRouter.use('/price', priceRoutes);
-// Use routers
-app.use('/api', protectedRouter); // All protected routes
+// protectedRouter.use('/users', userRoutes);
+// protectedRouter.use('/households', householdsRoutes);
+// protectedRouter.use('/shopping-lists', shoppinglistRoutes);
+// protectedRouter.use('/price', priceRoutes);
+// // Use routers
+// app.use('/api', protectedRouter); // All protected routes
+
 app.use('/api/auth', authRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/households', authMiddleware, householdsRoutes);
+app.use('/api/shopping-lists', authMiddleware, shoppinglistRoutes);
+app.use('/api/price', authMiddleware, priceRoutes);
 app.use('/api/protected', protectedRoutes);
-
-// app.use('/api/users', authMiddleware, userRoutes);
-// app.use('/api/households', authMiddleware, householdsRoutes);
-// app.use('/api/shopping-lists', authMiddleware, shoppinglistRoutes);
-// app.use('/api/price', authMiddleware, priceRoutes);
 
 module.exports = app;
