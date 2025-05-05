@@ -286,3 +286,49 @@ describe('PUT  /api/shopping-lists/list/:id/item/purchase', () => {
   });
   
 });
+describe('DELETE  /api/shopping-lists/list/:id/item/purchase', () => {
+  let token, user, household;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI);
+    user = await User.create({ email: 'test@example.com', passwordHash: 'hash', name: 'Test User' });
+    household = await Household.create({ name: 'Test Home', members: [user._id] });
+    token = generateToken(user._id);
+  });
+
+  afterAll(async () => {
+    await User.deleteMany();
+    await Household.deleteMany();
+    await ShoppingList.deleteMany();
+    await mongoose.disconnect();
+  });
+  
+  it('should delete an item in the shopping list', async () => {
+    const newList = await request(app)
+      .post('/api/shopping-lists')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Target List',
+        description: 'Shopping at Target',
+        householdId: household._id,
+      });
+
+    const newItem = await request(app)
+      .post(`/api/shopping-lists/list/${newList.body._id}/item/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Milk',
+        quantity: 2,
+      });
+    
+    const itemId = newItem.body.items[0]._id
+  
+    const res = await request(app)
+    .delete(`/api/shopping-lists/list/${newList.body._id}/item/${itemId}`)
+    .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe('Item deleted');
+  });
+  
+});
