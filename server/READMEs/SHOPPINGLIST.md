@@ -270,3 +270,25 @@ Errors:
 `404 - Shopping list not found`
 
 `500 - Server error`
+
+## Delete Item from Shopping List
+Endpoint:
+`DELETE /api/shopping-lists/list/:id/item/:itemId`
+Returns shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | Shopping List ID |
+| itemId| ObjectId | Yes      | ID of the item   |
+
+Sample Response:
+```json
+  {
+    "message": "Item deleted"
+  }
+```
+Errors:
+`404 - Shopping list not found`
+
+`500 - Server error`
