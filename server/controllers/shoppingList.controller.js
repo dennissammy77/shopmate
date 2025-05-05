@@ -20,7 +20,6 @@ router.post('/', async (req, res) => {
       res.status(500).json({ error: 'Failed to create shopping list' });
     }
 });
-
 router.get('/:householdId', async (req, res) => {
   try {
     const { householdId } = req.params;
@@ -33,7 +32,6 @@ router.get('/:householdId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch shopping lists' });
   }
 });
-
 router.get('/list/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -173,6 +171,41 @@ router.delete('/list/:id/item/:itemId', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+router.patch('/list/:listId/item/:itemId/price', async (req, res) => {
+  const { listId, itemId } = req.params;
+  const { storeName, price, currency = 'USD' } = req.body;
+
+  if (!storeName || price === undefined) {
+    return res.status(400).json({ error: 'storeName and price are required' });
+  }
+
+  try {
+    const list = await ShoppingList.findOneAndUpdate(
+      {
+        _id: listId,
+        'items._id': itemId
+      },
+      {
+        $set: {
+          'items.$.priceInfo': {
+            storeName,
+            price,
+            currency,
+            lastChecked: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!list) return res.status(404).json({ error: 'Item not found' });
+
+    res.json({ message: 'Price info updated', list });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update price info' });
   }
 });
 

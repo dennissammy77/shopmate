@@ -30,14 +30,12 @@ const ShoppingListSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: 'User',
         },
-        priceInfo: [
-          {
-            storeName: String,
-            price: Number,
-            currency: { type: String, default: 'USD' },
-            lastChecked: Date
-          }
-        ],        
+        priceInfo: {
+          storeName: String,
+          price: Number,
+          currency: String,
+          lastChecked: Date
+        },        
         history: [
           {
             action: {
