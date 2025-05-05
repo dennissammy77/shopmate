@@ -190,3 +190,45 @@ Errors:
 `404 - Shopping list not found`
 
 `500 - Server error`
+
+## Update Item in Shopping List
+Endpoint:
+`PUT /api/shopping-lists/list/:id/item/update`
+Returns shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | Shopping List ID |
+### Request Body
+| Field    | Type   | Required | Description                    |
+| -------- | ------ | -------- | ------------------------------ |
+| itemId   | String | Yes      | ID of the item to update       |
+| name     | String | No       | New name of the item           |
+| quantity | Number | No       | New quantity                   |
+
+```json
+    {
+      "itemId": "<item_id>",
+      "name": "Milk",
+      "quantity": "2",
+    }
+```
+Sample Response:
+```json
+    {
+      "_id": "list_id",
+      "items": [
+        {
+          "_id": "item_id",
+          "name": "Almond Milk",
+          "quantity": 3,
+          ...
+        }
+      ]
+    }
+```
+Errors:
+`404 - Shopping list not found`
+
+`500 - Server error`
