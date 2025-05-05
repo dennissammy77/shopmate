@@ -232,3 +232,41 @@ Errors:
 `404 - Shopping list not found`
 
 `500 - Server error`
+
+## Mark Item as Purchased
+Endpoint:
+`PUT /api/shopping-lists/list/:id/item/purchase`
+Returns shopping list by its ID.
+Headers:
+`Authorization: Bearer <your_token>`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | Shopping List ID |
+
+### Request Body
+| Field  | Type   | Required | Description            |
+| ------ | ------ | -------- | ---------------------- |
+| itemId | String | ✅       | ID of the item to mark |
+
+```json
+    {
+      "itemId": "<item_id>",
+    }
+```
+Sample Response:
+```json
+    {
+      "_id": "list_id",
+      "items": [
+        {
+          "_id": "item_id",
+          "status": "purchased",
+          ...
+        }
+      ]
+    }
+```
+Errors:
+`404 - Shopping list not found`
+
+`500 - Server error`
