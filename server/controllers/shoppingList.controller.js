@@ -127,5 +127,32 @@ router.put('/list/:id/item/update', async (req, res) => {
     res.status(500).json({ error: 'Failed to update item' });
   }
 });
+router.put('/list/:id/item/purchase', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { itemId } = req.body;
+
+    const list = await ShoppingList.findById(id);
+    if (!list) return res.status(404).json({ error: 'Shopping list not found' });
+
+    const item = list.items.id(itemId);
+    if (!item) return res.status(404).json({ error: 'Item not found in list' });
+
+    item.status = 'purchased';
+
+    item.history.push({
+      action: 'purchase',
+      userId: req.user._id
+    });
+
+    list.updatedAt = new Date();
+    await list.save();
+
+    res.status(200).json(list);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to mark item as purchased' });
+  }
+});
 
 module.exports = router;
