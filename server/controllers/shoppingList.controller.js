@@ -65,5 +65,38 @@ router.delete('/list/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete shopping list' });
   }
 });
+router.post('/list/:id/item/add', async (req, res) => {
+  try {
+    const { name, quantity } = req.body;
+    const { id } = req.params;
 
-module.exports = router
+    const list = await ShoppingList.findById(id);
+    if (!list) {
+      return res.status(404).json({ error: 'Shopping list not found' });
+    }
+
+    const newItem = {
+      name,
+      quantity,
+      lastModifiedBy: req.user._id,
+      history: [
+        {
+          action: 'add',
+          userId: req.user._id,
+        },
+      ],
+    };
+
+    list.items.push(newItem);
+    list.updatedAt = new Date();
+
+    await list.save();
+
+    res.status(200).json(list);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add item to shopping list' });
+  }
+});
+
+module.exports = router;
