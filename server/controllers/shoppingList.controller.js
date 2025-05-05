@@ -154,5 +154,26 @@ router.put('/list/:id/item/purchase', async (req, res) => {
     res.status(500).json({ error: 'Failed to mark item as purchased' });
   }
 });
+router.delete('/list/:id/item/:itemId', async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+
+    const list = await ShoppingList.findById(id);
+    if (!list) return res.status(404).json({ error: 'Shopping list not found' });
+
+    const item = list.items.id(itemId);
+    if (!item) return res.status(404).json({ error: 'Item not found in list' });
+
+    item.deleteOne(); // remove the subdocument
+
+    list.updatedAt = new Date();
+    await list.save();
+
+    res.status(200).json({ message: 'Item deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
 
 module.exports = router;
