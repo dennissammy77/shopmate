@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "contexts/AuthContext.js", "app/(auth)/login.js"  ]
+, "contexts/AuthContext.js", "app/(auth)/login.js", "app/(auth)/signup.js", "app/(tabs)/profile.js"  ]
 }
