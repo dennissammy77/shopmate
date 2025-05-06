@@ -21,15 +21,17 @@ const ProfileScreen = () => {
   useEffect(()=>{
     setName(data?.user?.name);
     setEmail(data?.user?.email);
+    setHousehold(data?.user?.householdId?.name);
   },[data])
   
-  const [name, setName] = useState(data?.user?.name);
-  const [email, setEmail] = useState(data?.user?.email);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('********');
   const [newhousehold, setNewHousehold] = useState(false);
   const [household, setHousehold] = useState('');
   const { logout } = useAuth();
 
+  // console.log(data)
 
   const handleUpdate = async() => {
     if (!name) {
@@ -100,6 +102,8 @@ const ProfileScreen = () => {
               placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
+              disabled={true}
+              readOnly={true}
             />
           </View>
 
@@ -116,9 +120,11 @@ const ProfileScreen = () => {
           </View>
           <View style={styles.householdHeader}>
             <Text style={styles.label}>Household</Text>
-            <TouchableOpacity onPress={()=>setNewHousehold(true)}>
-              <Text style={styles.saveButtonText}>add</Text>
-            </TouchableOpacity>
+            {!data?.user?.householdId && (
+              <TouchableOpacity onPress={()=>setNewHousehold(true)}>
+                <Text style={styles.saveButtonText}>add</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {!data?.user?.householdId && (
             <Text style={styles.label}>Your account is not linked to a household.</Text>
