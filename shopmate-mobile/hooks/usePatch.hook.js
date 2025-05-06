@@ -1,19 +1,20 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const usePost = (url) => {
+const usePatch = (url) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { token } = useAuth();    
+    const { token } = useAuth();
 
-    const postData = useCallback(async (body) => {
+
+    const patchData = useCallback(async (body) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'PATCH',
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${token.current}`
@@ -36,7 +37,7 @@ const usePost = (url) => {
         }
     }, [url]);
 
-    return { data, loading, error, postData };
+    return { data, loading, error, patchData };
 };
 
-export default usePost;
+export default usePatch;
