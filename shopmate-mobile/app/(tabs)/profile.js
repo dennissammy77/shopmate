@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import useFetch from '@/hooks/useFetch.hook.js';
+import usePatch from '@/hooks/usePatch.hook.js';
+import usePut from '@/hooks/usePut.hook.js';
 import { API_URL } from '@/constants/config';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
@@ -11,7 +13,9 @@ import { useAuth } from '@/contexts/AuthContext';
 const ProfileScreen = () => {
   // const [user, setUser] = useState(null);
   let { data, loading, error, refetch  } = useFetch(`${API_URL}/api/users/me`);
-  console.log('profile',data?.user.email);
+  const { data: patchedData, patchData } = usePatch(`${API_URL}/api/users/me`);
+  const { data: putedData, putData } = usePut(`${API_URL}/api/users/me`);
+
   useEffect(()=>{
     setName(data?.user?.name);
     setEmail(data?.user?.email);
@@ -22,6 +26,24 @@ const ProfileScreen = () => {
   const [password, setPassword] = useState('********');
   const [household, setHousehold] = useState('shopmate');
   const { logout } = useAuth();
+
+
+  const handleUpdate = async() => {
+    if (!name) {
+      Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+    try {
+      putData({
+        name,
+      });
+      console.log('putedData',putedData)
+      refetch();
+    } catch (err) {
+      console.log(error)
+      Alert.alert("Update failed", error.response?.data?.message || "Try again");
+    }
+  };
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
   
@@ -72,19 +94,22 @@ const ProfileScreen = () => {
               secureTextEntry={true}
             />
           </View>
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>household</Text>
-            <TextInput
-              style={styles.input}
-              value={household}
-              onChangeText={setHousehold}
-              placeholder="Enter household"
-            />
-          </View>
+          <Text style={styles.label}>Household</Text>
+          {data?.user?.household && (
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>household</Text>
+              <TextInput
+                style={styles.input}
+                value={household}
+                onChangeText={setHousehold}
+                placeholder="Enter household"
+              />
+            </View>
+          )}
         </View>
 
         {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity style={styles.saveButton} onPress={()=>handleUpdate()}>
           <Text style={styles.saveButtonText}>Save Changes</Text>
         </TouchableOpacity>
         {/* Logout Button */}
