@@ -13,7 +13,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     (async () => {
       const token = await AsyncStorage.getItem('@token');
-      tokenRef.current = token || '';
+      if(token){
+        tokenRef.current = token || '';
+        setIsAuthenticated(true)
+      }else{
+        setIsAuthenticated(false)
+      }
     })()
   }, []);
   const login = useCallback(async (token,user) => {

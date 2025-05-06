@@ -1,51 +1,57 @@
 import { View, Text, Button, StyleSheet, TextInput, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import axios from 'axios';
 import usePost from '@/hooks/usePost.hook.js';
 import { API_URL } from '@/constants/config.js'
-import { router } from 'expo-router';
 
-export default function Login() {
+export default function SignUp() {
   const { login } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { data: response, error, postData } = usePost(`${API_URL}/api/auth/login`);
+  const { data: response, error, postData } = usePost(`${API_URL}/api/auth/signup`);
 
-  const handleLogin = async() => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password.");
+  const handleSignUp = async() => {
+    if (!name || !email || !password) {
+      Alert.alert("Error", "Please enter both required fields.");
       return;
     }
     try {
       postData({
+        name,
         email,
         password,
       });
       const { token, user } = response;
-      console.log('token',token)
-      console.log('user',user)
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(error)
-      console.error("Login failed:", error.response?.data || error.message);
-      Alert.alert("Login failed", error.response?.data?.message || "Try again");
+      console.error("SignUp failed:", error.response?.data || error.message);
+      Alert.alert("SignUp failed", error.response?.data?.message || "Try again");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login to ShopMate</Text>
-
+      <Text style={styles.title}>Welcome to ShopMate</Text>
+      <Text style={styles.subHeading}>Create an account</Text>
       <TextInput
-        placeholder="Email"
+        placeholder="John Doe"
+        value={name}
+        onChangeText={setName}
+        style={styles.input}
+        autoCapitalize="none"
+      />
+      <TextInput
+        placeholder="johndoe@gmail.com"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
         autoCapitalize="none"
         keyboardType="email-address"
       />
-
       <TextInput
         placeholder="Password"
         value={password}
@@ -54,9 +60,7 @@ export default function Login() {
         secureTextEntry
       />
 
-      <Button title="Login" onPress={handleLogin} />
-      <Text style={styles.title}>or</Text>
-      <Text style={styles.small} onPress={()=> router.replace('/signup')}>create an account</Text>
+      <Button title="Create Account" onPress={handleSignUp} />
     </View>
   );
 }
@@ -70,14 +74,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    marginVertical: 8,
+    marginBottom: 24,
     textAlign: "center",
-    fontWeight: "regular",
+    fontWeight: "bold",
   },
-  small: {
+  subHeading: {
     fontSize: 16,
+    marginBottom: 24,
     textAlign: "center",
-    fontWeight: "regular",
+    fontWeight: "bold",
   },
   input: {
     height: 48,
