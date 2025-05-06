@@ -4,6 +4,7 @@ import axios from 'axios';
 import useFetch from '@/hooks/useFetch.hook.js';
 import usePatch from '@/hooks/usePatch.hook.js';
 import usePut from '@/hooks/usePut.hook.js';
+import usePost from '@/hooks/usePost.hook.js';
 import { API_URL } from '@/constants/config';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
@@ -15,6 +16,7 @@ const ProfileScreen = () => {
   let { data, loading, error, refetch  } = useFetch(`${API_URL}/api/users/me`);
   const { data: patchedData, patchData } = usePatch(`${API_URL}/api/users/me`);
   const { data: putedData, putData } = usePut(`${API_URL}/api/users/me`);
+  const { data: postedData, postData } = usePost(`${API_URL}/api/households`);
 
   useEffect(()=>{
     setName(data?.user?.name);
@@ -24,13 +26,14 @@ const ProfileScreen = () => {
   const [name, setName] = useState(data?.user?.name);
   const [email, setEmail] = useState(data?.user?.email);
   const [password, setPassword] = useState('********');
-  const [household, setHousehold] = useState('shopmate');
+  const [newhousehold, setNewHousehold] = useState(false);
+  const [household, setHousehold] = useState('');
   const { logout } = useAuth();
 
 
   const handleUpdate = async() => {
     if (!name) {
-      Alert.alert("Error", "Please enter both email and password.");
+      Alert.alert("Error", "Please enter required inputs");
       return;
     }
     try {
@@ -44,6 +47,23 @@ const ProfileScreen = () => {
       Alert.alert("Update failed", error.response?.data?.message || "Try again");
     }
   };
+
+  const handleCreateHouse = async()=>{
+    if (!household) {
+      Alert.alert("Error", "Please enter required inputs");
+      return;
+    }
+    try {
+      postData({
+        name: household,
+      });
+      console.log('postedData',postedData)
+      refetch();
+    } catch (err) {
+      console.log(error)
+      Alert.alert("Creation failed", error.response?.data?.message || "Try again");
+    }
+  }
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
   
@@ -72,7 +92,7 @@ const ProfileScreen = () => {
 
           {/* Email Field */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>E-mail address</Text>
+            <Text style={styles.label}>E-mail</Text>
             <TextInput
               style={styles.input}
               value={email}
@@ -94,10 +114,31 @@ const ProfileScreen = () => {
               secureTextEntry={true}
             />
           </View>
-          <Text style={styles.label}>Household</Text>
-          {data?.user?.household && (
+          <View style={styles.householdHeader}>
+            <Text style={styles.label}>Household</Text>
+            <TouchableOpacity onPress={()=>setNewHousehold(true)}>
+              <Text style={styles.saveButtonText}>add</Text>
+            </TouchableOpacity>
+          </View>
+          {!data?.user?.householdId && (
+            <Text style={styles.label}>Your account is not linked to a household.</Text>
+          )}
+          {(!data?.user?.householdId && newhousehold) && (
+            <View>
+              <Text style={styles.label}>Household Name</Text>
+              <TextInput
+                style={styles.input}
+                value={household}
+                onChangeText={setHousehold}
+                placeholder="House of Grace"
+              />
+              <TouchableOpacity onPress={()=>handleCreateHouse()}>
+                <Text style={styles.saveButtonText}>save</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {data?.user?.householdId && (
             <View style={styles.fieldContainer}>
-              <Text style={styles.label}>household</Text>
               <TextInput
                 style={styles.input}
                 value={household}
@@ -119,17 +160,6 @@ const ProfileScreen = () => {
       </ScrollView>
     </SafeAreaView>
   )
-  // return (
-  //   <View style={styles.container}>
-  //     <Text style={styles.heading}>My Profile</Text>
-  //     <Text style={styles.label}>Name: <Text style={styles.value}>{user?.name}</Text></Text>
-  //     <Text style={styles.label}>Email: <Text style={styles.value}>{user?.email}</Text></Text>
-  //     <Text style={styles.label}>Joined: <Text style={styles.value}>{new Date(user?.createdAt).toDateString()}</Text></Text>
-  //     {user?.household && (
-  //       <Text style={styles.label}>Household: <Text style={styles.value}>{user?.household?.name || user?.household}</Text></Text>
-  //     )}
-  //   </View>
-  // );
 };
 
 export default ProfileScreen;
@@ -142,7 +172,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingBottom: 20,
-    flex: 1
   },
   header: {
     padding: 16,
@@ -204,4 +233,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  householdHeader: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 });

@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
 
 const usePost = (url) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const { token } = useAuth();    
 
     const postData = useCallback(async (body) => {
         setLoading(true);
@@ -15,7 +16,7 @@ const usePost = (url) => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                //   'Authorization': `Bearer ${}`
+                  'Authorization': `Bearer ${token.current}`
                 },
                 body: JSON.stringify(body),
             });

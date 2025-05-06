@@ -4,20 +4,20 @@ This model will allow users to belong to shared shopping groups and later power 
 `models/Household.js`
 ```json
     {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
+        "name": {
+            "type": String,
+            "required": true,
+            "trim": true,
         },
-        members: [
+        "members": [
             {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+              "type": mongoose.Schema.Types.ObjectId,
+              "ref": 'User',
             },
         ],
     },
     {
-    timestamps: true, // adds createdAt and updatedAt
+    "timestamps": true, // adds createdAt and updatedAt
     }
 ```
 ## Relationships
