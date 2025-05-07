@@ -2,10 +2,13 @@ import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button } from
 import { Text, View } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { API_URL } from '@/constants/config';
 import useFetch from '@/hooks/useFetch.hook';
+import usePost from '@/hooks/usePost.hook';
+import useDelete from '@/hooks/useDelete.hook';
+import usePut from '@/hooks/usePut.hook';
 
 // Sample list to mock schema structure
 // const shoppingList = {
@@ -44,14 +47,24 @@ import useFetch from '@/hooks/useFetch.hook';
 export default function ModalScreen() {
   const { listId } = useLocalSearchParams();
   const [search, setSearch] = useState('');
+  const [shoppingList, setShoppingList] = useState({});
+  
   console.log(listId)
-  const { data: shoppingList, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch  } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
+  let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
+  const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists/list/${listId}/item/add`);
+  const { deleteData: deleteItemFromList } = useDelete();
+  const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
+  
+  useEffect(()=>{
+    setShoppingList(shoppingListFetched)
+  },[shoppingListFetched,putedData,postedItemToListData]);
+
   console.log(shoppingList);
   const [showItemForm, setshowItemForm] = useState(false);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
 
-  const handleSubmit = () => {
+  const handleAddItem = () => {
     if (!name || !quantity) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -63,10 +76,26 @@ export default function ModalScreen() {
       return;
     }
 
-    onSave({ name, quantity: quantityNum });
+    postItemToList({ name, quantity: quantityNum });
     setName('');
     setQuantity('');
+    shoppingListRefetch();
+    setshowItemForm(false)
   };
+
+  const handleDeleteItem = (itemId)=>{
+    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`)
+  };
+
+  const handleUpdateItem = (itemId,quantity)=>{
+    putData({
+      itemId,
+      quantity,
+    })
+    console.log('putedData',putedData)
+    shoppingListRefetch();
+    // setShoppingList(putedData)
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -104,7 +133,7 @@ export default function ModalScreen() {
             onChangeText={setQuantity}
             keyboardType="numeric"
           />
-          <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleAddItem}>
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
@@ -127,7 +156,7 @@ export default function ModalScreen() {
                   {item.name}
                 </Text>
                 <Text style={styles.itemTotal}>
-                  {item.priceInfo?.currency || 0} {item.priceInfo?.price * item?.quantity || 0}
+                  {item.priceInfo?.currency || 'USD'} {item.priceInfo?.price * item?.quantity || 0}
                 </Text>
               </View>
 
@@ -151,14 +180,14 @@ export default function ModalScreen() {
 
               {/* Controls: -, quantity, +, remove */}
               <View style={styles.controls}>
-                <TouchableOpacity style={styles.controlButton}>
+                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity - 1)}}>
                   <Text style={styles.controlText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{item.quantity}</Text>
-                <TouchableOpacity style={styles.controlButton}>
+                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity + 1)}}>
                   <Text style={styles.controlText}>+</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.removeButtonIcon}>
+                <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleDeleteItem(item?._id)}>
                   <Text style={styles.removeButtonText}>remove</Text>
                 </TouchableOpacity>
               </View>

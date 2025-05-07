@@ -246,7 +246,7 @@ Headers:
 ### Request Body
 | Field  | Type   | Required | Description            |
 | ------ | ------ | -------- | ---------------------- |
-| itemId | String | ✅       | ID of the item to mark |
+| itemId | String | Yes       | ID of the item to mark |
 
 ```json
     {
@@ -309,7 +309,14 @@ Headers:
 | storeName | String | Yes      | Name of the store       |
 | price     | Number | Yes      | Price of the product    |
 | currency  | String | No       | Currency (default: USD) |
-
+```json
+    {
+      "storeName": "Walmart",
+      "price": 4.99,
+      "currency": "USD",
+      "lastChecked": "2025-05-02T20:00:00.000Z"
+    }
+```
 Sample Response:
 ```json
   {
