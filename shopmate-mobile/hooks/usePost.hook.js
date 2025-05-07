@@ -16,7 +16,7 @@ const usePost = (url) => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token.current}`
+                  'Authorization': `Bearer ${token?.current}`
                 },
                 body: JSON.stringify(body),
             });
