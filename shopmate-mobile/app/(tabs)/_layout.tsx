@@ -37,7 +37,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Tab One',
-          headerShown: false,
+          // headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -56,11 +56,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="cart"
         options={{
-          title: 'Tab Two',
+          title: 'Cart',
           headerShown: false,
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="shopping-cart" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="lists"
+        options={{
+          title: 'Lists',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <TabBarIcon name="shopping-bag" color={color} />,
         }}
       />
       <Tabs.Screen
