@@ -35,7 +35,7 @@ router.get('/:householdId', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const list = await ShoppingList.findById(id);
+    const list = await ShoppingList.findById(id).populate('items.lastModifiedBy','name').populate('items.history.userId','name add');
 
     if (!list) {
       return res.status(404).json({ error: 'Shopping list not found' });
