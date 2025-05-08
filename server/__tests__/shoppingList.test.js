@@ -3,7 +3,7 @@ const app = require('../app');
 const mongoose = require('mongoose');
 const User = require('../models/user.model.js');
 const Household = require('../models/household.model.js');
-const ShoppingList = require('../models/ShoppingList.model.js');
+const ShoppingList = require('../models/shoppingList.model.js');
 const { generateToken } = require('../utils/jwt');
 
 describe('POST /api/shopping-lists', () => {
