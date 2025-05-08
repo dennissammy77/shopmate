@@ -1,4 +1,4 @@
-import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button,ScrollView } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
@@ -9,57 +9,91 @@ import useFetch from '@/hooks/useFetch.hook';
 import usePost from '@/hooks/usePost.hook';
 import useDelete from '@/hooks/useDelete.hook';
 import usePut from '@/hooks/usePut.hook';
+import ModalPopup from '@/components/ModalPopup';
+import usePatch from '@/hooks/usePatch.hook';
 
-// Sample list to mock schema structure
-// const shoppingList = {
-//   name: "Weekly Groceries",
-//   description: "Items needed for the week",
-//   items: [
-//     {
-//       _id: '1',
-//       name: 'Milk',
-//       quantity: 2,
-//       status: 'pending',
-//       lastModifiedBy: { name: 'Alice' },
-//       priceInfo: {
-//         storeName: 'SuperMart',
-//         price: 120,
-//         currency: 'USD',
-//         lastChecked: new Date().toISOString(),
-//       },
-//     },
-//     {
-//       _id: '2',
-//       name: 'Bread',
-//       quantity: 1,
-//       status: 'purchased',
-//       lastModifiedBy: { name: 'Bob' },
-//       priceInfo: {
-//         storeName: 'QuickShop',
-//         price: 80,
-//         currency: 'USD',
-//         lastChecked: new Date().toISOString(),
-//       },
-//     },
-//   ],
-// };
+const mockPriceOptions = [
+  {
+    name: "Organic Bananas",
+    price: 1.29,
+    currency: "USD",
+    storeName: "Walmart",
+    image: "https://via.placeholder.com/50?text=Walmart",
+  },
+  {
+    name: "Organic Bananas",
+    price: 1.35,
+    currency: "USD",
+    storeName: "Target",
+    image: "https://via.placeholder.com/50?text=Target",
+  },
+  {
+    name: "Organic Bananas",
+    price: 1.19,
+    currency: "USD",
+    storeName: "Costco",
+    image: "https://via.placeholder.com/50?text=Costco",
+  },
+  {
+    name: "Organic Bananas",
+    price: 1.45,
+    currency: "USD",
+    storeName: "Whole Foods",
+    image: "https://via.placeholder.com/50?text=WholeFoods",
+  },
+  {
+    name: "Organic Bananas",
+    price: 1.25,
+    currency: "USD",
+    storeName: "Trader Joe's",
+    image: "https://via.placeholder.com/50?text=TraderJoes",
+  },
+];
+
 
 export default function ModalScreen() {
   const { listId } = useLocalSearchParams();
-  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [shoppingList, setShoppingList] = useState({});
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [visibleItem, setVisibleItem] = useState(null);
+  const openPopup = (item) => {
+    setVisible(true);
+    setVisibleItem(item)
+  }
+
+  const closePopup = () => {
+    setVisible(false);
+    setVisibleItem(null)
+  }
   
-  console.log(listId)
+  ////console.log(listId)
   let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
   const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists/list/${listId}/item/add`);
+  const { data: patchedItemToListData, patchData: patchItemInList } = usePatch(`${API_URL}/api/shopping-lists/list/${listId}/item`);
   const { deleteData: deleteItemFromList } = useDelete();
   const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
   
   useEffect(()=>{
-    setShoppingList(shoppingListFetched)
+    if (searchQuery.trim() === '') {
+      setFilteredItems(shoppingList?.items || []);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = shoppingList?.items.filter(item =>
+        item.name.toLowerCase().includes(query)
+      );
+      setFilteredItems(filtered);
+    }
+  },[searchQuery]);
+
+  useEffect(()=>{
+    setShoppingList(shoppingListFetched);
+    setFilteredItems(shoppingListFetched?.items || []);
+    console.log(shoppingListFetched?.items)
   },[shoppingListFetched,putedData,postedItemToListData]);
 
-  console.log(shoppingList);
+  ////console.log(shoppingList);
   const [showItemForm, setshowItemForm] = useState(false);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -92,10 +126,23 @@ export default function ModalScreen() {
       itemId,
       quantity,
     })
-    console.log('putedData',putedData)
+    ////console.log('putedData',putedData)
     shoppingListRefetch();
     // setShoppingList(putedData)
   }
+  
+  const handleUpdateItemPrice = (itemId,storeName,price,currency='USD')=>{
+    if(!itemId) return console.log('No Item Id found',itemId,storeName,price)
+    console.log('Item Id found',itemId,storeName,price)
+    patchItemInList({
+      storeName,
+      price,
+      currency
+    },`/${itemId}/price`)
+    ////console.log('patchedData',patchedItemToListData)
+    closePopup()
+    shoppingListRefetch();
+  } 
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,8 +153,8 @@ export default function ModalScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Search items..."
-          value={search}
-          onChangeText={setSearch}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
           returnKeyType="search"
           clearButtonMode="while-editing"
         />
@@ -139,7 +186,7 @@ export default function ModalScreen() {
         </View>
       )}
       <FlatList
-        data={shoppingList?.items}
+        data={filteredItems}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.itemsContainer}
         renderItem={({ item }) => (
@@ -164,13 +211,17 @@ export default function ModalScreen() {
               <Text style={styles.itemStore}>
                 @ {item.priceInfo?.storeName || 'no store'}
               </Text>
+              <Text style={styles.itemStore}>
+                price USD {item.priceInfo?.price || 'no store'} / item
+              </Text>
 
               {/* Added by / Modified by */}
               <Text style={styles.itemDetails}>
                 Added by: {item.history?.[0]?.userId?.name || 'Unknown'}
               </Text>
+
               <Text style={styles.itemDetails}>
-                Modified by: {item.lastModifiedBy?.name || 'Unknown'}
+                Last Modified by: {item.lastModifiedBy?.name || 'Unknown'}
               </Text>
 
               {/* Status */}
@@ -190,11 +241,42 @@ export default function ModalScreen() {
                 <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleDeleteItem(item?._id)}>
                   <Text style={styles.removeButtonText}>remove</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.compareButton} onPress={()=>openPopup(item)}>
+                  <Text style={styles.compareButtonText}>compare prices</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
         )}
       />
+      <ModalPopup
+        isVisible={visible}
+        transparent={true}
+        dismiss={closePopup}
+        title={'Compare Prices'}
+      >
+        <ScrollView contentContainerStyle={styles.priceList}>
+          {mockPriceOptions?.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.priceCard}
+              onPress={() => handleUpdateItemPrice(visibleItem?._id,option.storeName,option.price)} // This would apply the selected price to the item
+            >
+              <Image
+                source={{ uri: option.image || 'https://via.placeholder.com/50' }}
+                style={styles.itemImage}
+              />
+              <View style={styles.priceInfo}>
+                <Text style={styles.itemName}>{option.name}</Text>
+                <Text style={styles.itemPrice}>
+                  {option.currency} {option.price}
+                </Text>
+                <Text style={styles.storeName}>@ {option.storeName}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ModalPopup>
     </SafeAreaView>
   );
 }
@@ -361,5 +443,62 @@ const styles = StyleSheet.create({
     color: Colors.light.secondary,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  compareButton: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 8,
+    padding: 8,
+    marginHorizontal: 10,
+    alignItems: 'center',
+  },
+  compareButtonText: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  priceList:{
+    padding: 20,
+    height: '250',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  priceList: {
+    padding: 10,
+  },
+  priceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 10,
+    backgroundColor: Colors.light.secondary,
+    color: Colors.light.primary,
+  },
+  itemImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  priceInfo: {
+    flex: 1,
+    backgroundColor: Colors.light.secondary,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  itemPrice: {
+    fontSize: 14,
+    color: '#333',
+  },
+  storeName: {
+    fontSize: 12,
+    color: '#777',
   },
 });

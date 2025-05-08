@@ -12,7 +12,7 @@ const ListsScreen = () => {
   const { data: listsData, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
 
   // useEffect(()=>{
-  console.log(listsData)
+  //console.log(listsData)
   // },[userData])
   return(
     <SafeAreaView style={styles.container}>
