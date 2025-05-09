@@ -136,4 +136,25 @@ router.patch('/members', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.post('/:id/join', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Household Id is required' });
+    };
+    const user = await User.findById(req.user.id);
+    const household = await Household.findById(id);
+    if (user && !household.members.includes(user._id)) {
+      household.members.push(user._id);
+      user.householdId = household._id;
+      await user.save();
+      await household.save();
+    }
+
+    res.status(201).json({message: "Joined Household successfully"});
+  } catch (err) {
+    LOGGER.log('error',`Error while joining household!\n${err}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = router;

@@ -184,3 +184,29 @@ Error Responses
 `404 Not Found`: Household not found
 
 `500 Server Error`: Unexpected issue
+
+## Create Household
+
+**Endpoint:** `POST /api/households/:id/join`  
+**Auth Required:** Yes (Bearer Token)  
+
+### Headers
+`Authorization: Bearer JWT_TOKEN_HERE`
+`Content-Type: application/json`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | House ID         |
+
+Success Response
+`Status: 201 Created`
+```json
+    {
+      "message": "Joined Household successfully"
+    }
+```
+Error Responses
+`400 Bad Request`: Household is missing
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error
