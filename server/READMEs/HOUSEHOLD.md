@@ -4,20 +4,20 @@ This model will allow users to belong to shared shopping groups and later power 
 `models/Household.js`
 ```json
     {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
+        "name": {
+            "type": String,
+            "required": true,
+            "trim": true,
         },
-        members: [
+        "members": [
             {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+              "type": mongoose.Schema.Types.ObjectId,
+              "ref": 'User',
             },
         ],
     },
     {
-    timestamps: true, // adds createdAt and updatedAt
+    "timestamps": true, // adds createdAt and updatedAt
     }
 ```
 ## Relationships
@@ -184,3 +184,29 @@ Error Responses
 `404 Not Found`: Household not found
 
 `500 Server Error`: Unexpected issue
+
+## Create Household
+
+**Endpoint:** `POST /api/households/:id/join`  
+**Auth Required:** Yes (Bearer Token)  
+
+### Headers
+`Authorization: Bearer JWT_TOKEN_HERE`
+`Content-Type: application/json`
+| Param | Type     | Required | Description      |
+| ----- | -------- | -------- | ---------------- |
+| id    | ObjectId | Yes      | House ID         |
+
+Success Response
+`Status: 201 Created`
+```json
+    {
+      "message": "Joined Household successfully"
+    }
+```
+Error Responses
+`400 Bad Request`: Household is missing
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error

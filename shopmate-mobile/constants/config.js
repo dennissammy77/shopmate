@@ -1,0 +1,1 @@
+export const API_URL = 'https://shopmate-ue43.onrender.com'
