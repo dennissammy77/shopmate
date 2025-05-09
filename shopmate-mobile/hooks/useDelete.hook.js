@@ -1,24 +1,23 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const usePost = (url) => {
+const useDelete = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { token } = useAuth();    
 
-    const postData = useCallback(async (body) => {
+    const deleteData = useCallback(async (url) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'DELETE',
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${token?.current}`
                 },
-                body: JSON.stringify(body),
             });
     
             if (!response.ok) {
@@ -34,9 +33,9 @@ const usePost = (url) => {
         } finally {
             setLoading(false);
         }
-    }, [url]);
+    }, []);
 
-    return { data, loading, error, postData };
+    return { data, loading, error, deleteData };
 };
 
-export default usePost;
+export default useDelete;

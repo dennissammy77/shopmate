@@ -61,6 +61,8 @@ export default function SignUp() {
       />
 
       <Button title="Create Account" onPress={handleSignUp} />
+      <Text style={styles.small} onPress={()=> router.replace('/login')}>create an account</Text>
+      
     </View>
   );
 }

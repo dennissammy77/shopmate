@@ -8,7 +8,7 @@ function useFetch(url) {
     const { token } = useAuth();
 
     const fetchData = useCallback(async () => {
-        // console.log(token)
+        // ////console.log(token)
         setLoading('loading...')
         setData(null);
         setError(null);
@@ -21,10 +21,11 @@ function useFetch(url) {
             },
         }).then((response) => response.json()).then((response) => {            
             setLoading(false);
-            // console.log(response)
+            ////console.log('response data',response);
             return response && setData(response);
         })
         .catch(err => {
+            ////console.log('response error',err);
             setLoading(false)
             setError('An error occurred.',err)
         })
