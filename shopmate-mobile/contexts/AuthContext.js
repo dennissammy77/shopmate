@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.setItem('@token', token);
     await AsyncStorage.setItem('@user', user);
     tokenRef.current = token;
-    router.replace('/(tabs)') // ✅ Redirect to home tab
+    router.replace('/(tabs)/cart') // ✅ Redirect to home tab
   }, []);
   // ✅ Logout function (Redirect to Auth Screen)
   const logout = useCallback(async () => {
