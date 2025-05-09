@@ -1,7 +1,7 @@
-import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button,ScrollView } from 'react-native';
+import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button,ScrollView, Alert } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { API_URL } from '@/constants/config';
@@ -72,7 +72,8 @@ export default function ModalScreen() {
   let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
   const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists/list/${listId}/item/add`);
   const { data: patchedItemToListData, patchData: patchItemInList } = usePatch(`${API_URL}/api/shopping-lists/list/${listId}/item`);
-  const { deleteData: deleteItemFromList } = useDelete();
+  const { data: deletedItemToListData, deleteData: deleteItemFromList } = useDelete();
+  const { data: deletedListData, deleteData: deleteList } = useDelete();
   const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
   
   useEffect(()=>{
@@ -91,12 +92,19 @@ export default function ModalScreen() {
     setShoppingList(shoppingListFetched);
     setFilteredItems(shoppingListFetched?.items || []);
     console.log(shoppingListFetched?.items)
-  },[shoppingListFetched,putedData,postedItemToListData]);
+  },[shoppingListFetched,putedData,postedItemToListData,deletedItemToListData,patchedItemToListData]);
 
   ////console.log(shoppingList);
   const [showItemForm, setshowItemForm] = useState(false);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
+
+  const handleDeleteList = ()=>{
+    deleteList(`${API_URL}/api/shopping-lists/list/${listId}`);
+    shoppingListRefetch()
+    router.replace(`/(tabs)/lists`)
+    //68154187a401c2c191a554a9
+  };
 
   const handleAddItem = () => {
     if (!name || !quantity) {
@@ -118,7 +126,8 @@ export default function ModalScreen() {
   };
 
   const handleDeleteItem = (itemId)=>{
-    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`)
+    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`);
+    shoppingListRefetch()
   };
 
   const handleUpdateItem = (itemId,quantity)=>{
@@ -146,7 +155,18 @@ export default function ModalScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>{shoppingList?.name}</Text>
+
+      <View style={styles.row}>
+        <Text style={styles.title}>{shoppingList?.name}</Text>
+        <View style={styles.row}>
+          <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleDeleteList()}>
+            <Text style={styles.removeButtonText}>Delete</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.StartShoppingButton} onPress={()=> router.replace(`/(tabs)/cart?listId=${listId}`)}>
+            <Text style={styles.StartShoppingButtonText}>Start Shopping</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <Text style={styles.description}>{shoppingList?.description}</Text>
 
       <View style={styles.searchRow}>
@@ -162,7 +182,6 @@ export default function ModalScreen() {
           <Text style={styles.addButtonText}>{!showItemForm ? "Add Item" : "Close"}</Text>
         </TouchableOpacity>
       </View>
-      {/* Create a simple form with two inputs, name and quantity and a save button */}
       {showItemForm && (
         <View style={styles.form}>
           <Text style={styles.label}>Item Name</Text>
@@ -267,7 +286,7 @@ export default function ModalScreen() {
                 style={styles.itemImage}
               />
               <View style={styles.priceInfo}>
-                <Text style={styles.itemName}>{option.name}</Text>
+                <Text style={styles.itemName}>{visibleItem?.name}</Text>
                 <Text style={styles.itemPrice}>
                   {option.currency} {option.price}
                 </Text>
@@ -307,6 +326,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    backgroundColor: Colors.light.base,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: Colors.light.base,
   },
   searchInput: {
@@ -500,5 +525,16 @@ const styles = StyleSheet.create({
   storeName: {
     fontSize: 12,
     color: '#777',
+  },
+  StartShoppingButton: {
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 8,
+    padding: 6,
+    marginLeft: 10,
+  },
+  StartShoppingButtonText: {
+    color: Colors.light.primary,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

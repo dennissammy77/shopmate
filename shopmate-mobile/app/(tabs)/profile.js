@@ -69,7 +69,7 @@ const ProfileScreen = () => {
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
   
-  if (!data) return <Text style={styles.error}>Could not load profile</Text>;
+  // if (!data) return <Text style={styles.error}>Could not load profile</Text>;
 
   return(
     <SafeAreaView style={styles.container}>
