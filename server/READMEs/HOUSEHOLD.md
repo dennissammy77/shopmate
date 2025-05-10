@@ -210,3 +210,39 @@ Error Responses
 `401 Unauthorized`: Missing or invalid token
 
 `500 Server Error`: Internal error
+## Recommend Shopping list for user Household
+
+**Endpoint:** `POST /api/households/recommend/list`  
+**Auth Required:** Yes (Bearer Token)  
+
+### Headers
+`Authorization: Bearer JWT_TOKEN_HERE`
+`Content-Type: application/json`
+
+Success Response
+`Status: 201 Created`
+```json
+    {
+      "name": "Recommended List",
+      "description": "List generated from recommendation engine",
+      "householdId":"householdId",
+      "createdBy": "req.user._id", // Make sure `req.user` is populat,
+      "items": [{
+        "name": "temNam",
+        "quantity": 1,
+        "lastModifiedBy": "eq.user._i",
+        "history": [
+          {
+            "action": "add",
+            "userId": "eq.user._i",
+          },
+        ],
+      }]
+    }
+```
+Error Responses
+`404 Bad Request`: No user Found
+
+`401 Unauthorized`: Missing or invalid token
+
+`500 Server Error`: Internal error

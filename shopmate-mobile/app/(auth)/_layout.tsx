@@ -6,7 +6,7 @@ export default function AuthLayout() {
   const { isAuthenticated } = useAuth();
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/(tabs)')
+      router.replace('/(tabs)/cart')
     }
   }, [isAuthenticated]);
 

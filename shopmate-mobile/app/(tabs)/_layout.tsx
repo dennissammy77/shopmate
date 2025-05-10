@@ -31,14 +31,14 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: useClientOnlyValue(false, true),
       }}>
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={Colors.light.primary} />,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="cart" // dummy route
         options={{

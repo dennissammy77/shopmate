@@ -5,6 +5,8 @@ import { useState } from 'react';
 import axios from 'axios';
 import usePost from '@/hooks/usePost.hook.js';
 import { API_URL } from '@/constants/config.js'
+import { TouchableOpacity } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export default function SignUp() {
   const { login } = useAuth();
@@ -60,8 +62,14 @@ export default function SignUp() {
         secureTextEntry
       />
 
-      <Button title="Create Account" onPress={handleSignUp} />
-      <Text style={styles.small} onPress={()=> router.replace('/login')}>create an account</Text>
+      {/* <Button title="Create Account" style={styles.saveButton} onPress={handleSignUp}>
+
+      </Button> */}
+      <TouchableOpacity style={styles.saveButton} onPress={handleSignUp}>
+        <Text style={styles.saveButtonText}>Create Account</Text>
+      </TouchableOpacity>
+      <Text style={styles.title}>or</Text>      
+      <Text style={styles.small} onPress={()=> router.replace('/login')}>Login</Text>
       
     </View>
   );
@@ -93,5 +101,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     paddingHorizontal: 12,
+  },
+  saveButton: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: Colors.light.secondary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  small: {
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "regular",
   },
 });

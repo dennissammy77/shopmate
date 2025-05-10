@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import useFetch from '@/hooks/useFetch.hook.js';
 import usePatch from '@/hooks/usePatch.hook.js';
@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import Colors from '@/constants/Colors.ts'
 import { useAuth } from '@/contexts/AuthContext';
+import { Share } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const ProfileScreen = () => {
   // const [user, setUser] = useState(null);
@@ -22,16 +24,26 @@ const ProfileScreen = () => {
     setName(data?.user?.name);
     setEmail(data?.user?.email);
     setHousehold(data?.user?.householdId?.name);
-  },[data])
+  },[data,joinByInvitedata,patchedData,postedData,putedData])
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('********');
   const [newhousehold, setNewHousehold] = useState(false);
   const [household, setHousehold] = useState('');
+  const [householdIdInvite, setHouseholdIdInvite] = useState('');
   const { logout } = useAuth();
+  const { data: joinByInvitedata, postData: joinByInvite } = usePost(`${API_URL}/api/households/${householdIdInvite}/join`);
 
+  const router = useRouter();
+  const params = useLocalSearchParams();
   // console.log(data)
+  const reloadPage = () => {
+    router.replace({
+      pathname: router.pathname,
+      params, // Preserve query params if needed
+    });
+  };
 
   const handleUpdate = async() => {
     if (!name) {
@@ -42,8 +54,8 @@ const ProfileScreen = () => {
       putData({
         name,
       });
-      console.log('putedData',putedData)
-      refetch();
+      console.log('putedData',putedData);
+      refetch()
     } catch (err) {
       console.log(error)
       Alert.alert("Update failed", error.response?.data?.message || "Try again");
@@ -59,13 +71,33 @@ const ProfileScreen = () => {
       postData({
         name: household,
       });
-      console.log('postedData',postedData)
-      refetch();
+      console.log('postedData',postedData);
+      refetch()
     } catch (err) {
       console.log(error)
       Alert.alert("Creation failed", error.response?.data?.message || "Try again");
     }
-  }
+  };
+
+  const handleJoinHouse = async()=>{
+    console.log('householdIdInvite',householdIdInvite)
+    if (!householdIdInvite) {
+      Alert.alert("Error", "Please enter a valid household Id");
+      return;
+    }
+    console.log('started')
+    console.log('continue')
+    
+    try {
+      joinByInvite();
+      console.log('postedData',data);
+      Alert.alert("Success", "You joined this house!");;
+      refetch()
+    } catch (err) {
+      console.log(error)
+      Alert.alert("Could not join this house!", error.response?.data?.message || "Try again");
+    }
+  };
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
   
@@ -141,6 +173,16 @@ const ProfileScreen = () => {
               <TouchableOpacity onPress={()=>handleCreateHouse()}>
                 <Text style={styles.saveButtonText}>save</Text>
               </TouchableOpacity>
+              <Text style={styles.label}>or join one</Text>
+              <TextInput
+                style={styles.input}
+                value={householdIdInvite}
+                onChangeText={setHouseholdIdInvite}
+                placeholder="Enter household Id"
+              />
+              <TouchableOpacity onPress={()=>handleJoinHouse()}>
+                <Text style={styles.saveButtonText}>join this house</Text>
+              </TouchableOpacity>
             </View>
           )}
           {data?.user?.householdId && (
@@ -151,6 +193,37 @@ const ProfileScreen = () => {
                 onChangeText={setHousehold}
                 placeholder="Enter household"
               />
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    const result = await Share.share({
+                      message: `Join my household using this code: ${data?.user?.householdId?._id}.`,
+                    });
+
+                    // Optional: Check how the share was handled
+                    if (result.action === Share.sharedAction) {
+                      if (result.activityType) {
+                        // Shared with activity type of result.activityType
+                      } else {
+                        // Shared
+                      }
+                    } else if (result.action === Share.dismissedAction) {
+                      // Dismissed
+                    }
+                  } catch (error) {
+                    console.error(error.message);
+                  }
+                }}
+                style={{ marginVertical: 5 }}
+              >
+                <TextInput
+                  style={styles.input}
+                  value={data?.user?.householdId?._id}
+                  editable={false}
+                  placeholder="Enter household"
+                />
+                <Text style={{ color: 'green' }}>Invite other members</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
