@@ -1,7 +1,7 @@
 import { StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Button } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, useLocalSearchParams, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { API_URL } from '@/constants/config';
@@ -11,23 +11,24 @@ import useDelete from '@/hooks/useDelete.hook';
 import usePut from '@/hooks/usePut.hook';
 
 export default function CartScreen() {
-  const { listId } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const [listId, setlistId] = useState(params.listId);
   const [searchQuery, setSearchQuery] = useState('');
   const [shoppingList, setShoppingList] = useState({});
   const [filteredItems, setFilteredItems] = useState([]);
   
   //console.log(listId)
   let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
-  const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists/list/${listId}/item/add`);
   const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
   const { data: purchaseData, putData: putPurchaseData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`);
+  const { data: recommendshoppingList, loading: recommendshoppingListLoading, error: recommendshoppingListError, postData: recommendShoppingListPosted} = usePost(`${API_URL}/api/households/recommend/list`);
   
   useEffect(()=>{
     if (searchQuery.trim() === '') {
       setFilteredItems(shoppingList?.items || []);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = shoppingList?.items.filter(item =>
+      const filtered = shoppingList?.items?.filter(item =>
         item.name.toLowerCase().includes(query)
       );
       setFilteredItems(filtered);
@@ -37,7 +38,7 @@ export default function CartScreen() {
   useEffect(()=>{
     setShoppingList(shoppingListFetched);
     setFilteredItems(shoppingListFetched?.items || []);
-  },[shoppingListFetched,putedData,postedItemToListData,shoppingListRefetch,purchaseData]);
+  },[shoppingListFetched,putedData,shoppingListRefetch,purchaseData,recommendshoppingList]);
 
   const handlePurchaseItem = (itemId)=>{
     putPurchaseData({
@@ -55,19 +56,48 @@ export default function CartScreen() {
     shoppingListRefetch();
     // setShoppingList(putedData)
   }
+  const handleRecommendList = ()=>{
+    recommendShoppingListPosted();
+    if(recommendshoppingListError){
+      return Alert.alert("Error", "We could not recommend your list");
+    }else{
+      console.log('recommendshoppingList',recommendshoppingList)
+      setShoppingList(recommendshoppingList)
+      // attach listId after the data is created
+      setlistId(recommendshoppingList?._id)
+      router.push(`/(tabs)/cart?listId=${recommendshoppingList?._id}`);
+    }
+  };
+  const handleClearCart = ()=>{
+    setlistId('')
+  };
 
   if(!listId) {
     return(
       <SafeAreaView style={styles.centeredPage}>
         <Text style={styles.title}>Select a list to start shopping</Text>
-        <Link href='/(tabs)/lists'>Go to your shopping lists</Link>
+        {/* <Link href='/(tabs)/lists'>Go to your shopping lists</Link> */}
+        <TouchableOpacity style={styles.secondaryButtonIcon} onPress={()=>router.push(`/(tabs)/lists`)}>
+          <Text style={styles.secondaryButtonText}>Go to your shopping lists</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>or</Text>
+        <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handleRecommendList()}>
+          <Text style={styles.purchaseButtonText}>Recommend me a list</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     )
   }  
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>{shoppingList?.name}</Text>
+      <View style={styles.row}>
+        <Text style={styles.title}>Cart</Text>
+        <View style={styles.row}>
+          <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleClearCart()}>
+            <Text style={styles.removeButtonText}>Clear</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <Text style={styles.description}>{shoppingList?.description}</Text>
 
       <View style={styles.searchRow}>
@@ -169,6 +199,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: Colors.light.base,
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.light.base,
+  },
+  removeButton: {
+    padding: 6,
+    backgroundColor: '#ef4444',
+    borderRadius: 6,
+    marginLeft: 8,
+    marginTop: 4,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
   searchInput: {
     flex: 1,
     backgroundColor: Colors.light.white,
@@ -243,6 +291,18 @@ const styles = StyleSheet.create({
   },
   purchaseButtonText: {
     color: Colors.light.secondary,
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  secondaryButtonIcon: {
+    padding: 6,
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 6,
+    marginLeft: 8,
+    marginTop: 4,
+  },
+  secondaryButtonText: {
+    color: Colors.light.primary,
     fontWeight: 'bold',
     fontSize: 12,
   },

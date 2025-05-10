@@ -10,10 +10,16 @@ import usePost from '@/hooks/usePost.hook';
 
 const ListsScreen = () => {
   let { data: userData, loading: userDataLoading, error: userDataError, refetch: userDataRefetch  } = useFetch(`${API_URL}/api/users/me`);
-  const { data: listsData, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
+  const { data: shoppingListsFetched, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
   const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists`);
 
+  const [listsData, setlistsData] = useState([]);
+  useEffect(()=>{
+    setlistsData(shoppingListsFetched);
+  },[shoppingListsFetched,listsDataLoading]);
+  
   const [showItemForm, setshowItemForm] = useState(false);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
