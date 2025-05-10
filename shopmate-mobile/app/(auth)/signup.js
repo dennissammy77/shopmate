@@ -39,6 +39,8 @@ export default function SignUp() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to ShopMate</Text>
       <Text style={styles.subHeading}>Create an account</Text>
+
+      <Text style={styles.label}>Username</Text>
       <TextInput
         placeholder="John Doe"
         value={name}
@@ -46,6 +48,7 @@ export default function SignUp() {
         style={styles.input}
         autoCapitalize="none"
       />
+      <Text style={styles.label}>Email</Text>
       <TextInput
         placeholder="johndoe@gmail.com"
         value={email}
@@ -54,6 +57,7 @@ export default function SignUp() {
         autoCapitalize="none"
         keyboardType="email-address"
       />
+      <Text style={styles.label}>Password</Text>
       <TextInput
         placeholder="Password"
         value={password}
@@ -62,9 +66,6 @@ export default function SignUp() {
         secureTextEntry
       />
 
-      {/* <Button title="Create Account" style={styles.saveButton} onPress={handleSignUp}>
-
-      </Button> */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSignUp}>
         <Text style={styles.saveButtonText}>Create Account</Text>
       </TouchableOpacity>
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.light.base,
   },
   title: {
     fontSize: 24,
@@ -101,6 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     paddingHorizontal: 12,
+    backgroundColor: Colors.light.white,
   },
   saveButton: {
     backgroundColor: Colors.light.primary,
