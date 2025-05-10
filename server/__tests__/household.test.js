@@ -229,3 +229,42 @@ describe('PATCH /api/households/members', () => {
     expect(res.body.household.members).not.toContain(userToRemove._id.toString());
   });
 });
+describe('GET /recommend/list', () => {
+  
+  it('should return 404 if no lists exist', async () => {
+    const mockUser = await User.create({ householdId: new mongoose.Types.ObjectId() });
+
+    const res = await request(app)
+      .get('/recommend/list')
+      .set('Authorization', `Bearer ${mockUser._id}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe('No shopping lists found for this household.');
+  });
+
+  it('should return 201 and create a recommended list', async () => {
+    const householdId = new mongoose.Types.ObjectId();
+    const user = await User.create({ householdId });
+
+    await ShoppingList.create({
+      name: 'Weekly Groceries',
+      householdId,
+      createdBy: user._id,
+      items: [
+        { name: 'Milk', quantity: 1 },
+        { name: 'Eggs', quantity: 2 }
+      ]
+    });
+
+    axios.post.mockResolvedValue({
+      data: { recommended_products: ['Butter', 'Bread'] }
+    });
+
+    const res = await request(app)
+      .get('/recommend/list')
+      .set('Authorization', `Bearer ${user._id}`);
+
+    expect(res.status).toBe(201);
+    expect(res.body.items).toHaveLength(2);
+  });
+});
