@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require('../models/user.model.js');
 const Household = require('../models/household.model.js');
 const LOGGER = require("../lib/LOGGER.lib.js");
+const axios = require('axios');
+const ShoppingList = require('../models/shoppingList.model.js');
 
 router.post('/', async (req, res) => {
   try {
@@ -157,4 +159,60 @@ router.post('/:id/join', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.get('/recommend/list', async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const householdId = user?.householdId;
+    // 1. Fetch all shopping lists for this household
+    const shoppingLists = await ShoppingList.find({ householdId });
+
+    if (!shoppingLists.length) {
+      return res.status(404).json({ message: 'No shopping lists found for this household.' });
+    }
+
+    // 2. Extract all item names
+    const allItemNames = shoppingLists.flatMap(list =>
+      list.items.map(item => item.name.toLowerCase())
+    );
+    console.log(allItemNames)
+
+    // 3. Send data to recommendation API
+    const { data: recommendedItems } = await axios.post(
+      'https://recommend-vfaq.onrender.com/recommend',
+      { cart: allItemNames }
+      // { cart: ['meat','cheese'] }
+    );
+    console.log(recommendedItems)
+
+    if (!Array.isArray(recommendedItems?.recommended_products) || recommendedItems?.recommended_products.length === 0) {
+      return res.status(400).json({ message: 'No recommendations received.' });
+    }
+
+    // 4. Create a new list with the recommended items
+    const newList = await ShoppingList.create({
+      name: 'Recommended List',
+      description: 'List generated from recommendation engine',
+      householdId,
+      createdBy: req.user._id, // Make sure `req.user` is populated
+      items: recommendedItems?.recommended_products.map(itemName => ({
+        name: itemName,
+        quantity: 1,
+        lastModifiedBy: req.user._id,
+        history: [
+          {
+            action: 'add',
+            userId: req.user._id,
+          },
+        ],
+      }))
+    });
+    console.log(newList);
+
+    res.status(201).json(newList);
+  } catch (err) {
+    console.error('Error creating recommended list:', err.message);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;
