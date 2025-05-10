@@ -159,7 +159,7 @@ router.post('/:id/join', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-router.get('/recommend/list', async (req, res) => {
+router.post('/recommend/list', async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     const householdId = user?.householdId;
