@@ -30,8 +30,8 @@ export default function SignUp() {
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(error)
-      console.error("SignUp failed:", error.response?.data || error.message);
-      Alert.alert("SignUp failed", error.response?.data?.message || "Try again");
+      console.error("SignUp failed:", error?.response?.data || error?.message);
+      Alert.alert("SignUp failed", error?.response?.data?.message || "Try again");
     }
   };
 
