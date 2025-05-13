@@ -30,8 +30,8 @@ export default function Login() {
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(err)
-      console.error("Login failed:", error.response?.data || error.message);
-      Alert.alert("Login failed", error.response?.data?.message || "Try again");
+      console.error("Login failed:", error?.response?.data || error?.message);
+      Alert.alert("Login failed", error?.response?.data?.message || "Try again");
     }
   };
 

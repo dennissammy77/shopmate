@@ -14,18 +14,6 @@ import { Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const ProfileScreen = () => {
-  // const [user, setUser] = useState(null);
-  let { data, loading, error, refetch  } = useFetch(`${API_URL}/api/users/me`);
-  const { data: patchedData, patchData } = usePatch(`${API_URL}/api/users/me`);
-  const { data: putedData, putData } = usePut(`${API_URL}/api/users/me`);
-  const { data: postedData, postData } = usePost(`${API_URL}/api/households`);
-
-  useEffect(()=>{
-    setName(data?.user?.name);
-    setEmail(data?.user?.email);
-    setHousehold(data?.user?.householdId?.name);
-  },[data,joinByInvitedata,patchedData,postedData,putedData])
-  
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('********');
@@ -33,7 +21,20 @@ const ProfileScreen = () => {
   const [household, setHousehold] = useState('');
   const [householdIdInvite, setHouseholdIdInvite] = useState('');
   const { logout } = useAuth();
+  // const [user, setUser] = useState(null);
+  let { data, loading, error, refetch  } = useFetch(`${API_URL}/api/users/me`);
+  const { data: patchedData, patchData } = usePatch(`${API_URL}/api/users/me`);
+  const { data: putedData, putData } = usePut(`${API_URL}/api/users/me`);
+  const { data: postedData, postData } = usePost(`${API_URL}/api/households`);
   const { data: joinByInvitedata, postData: joinByInvite } = usePost(`${API_URL}/api/households/${householdIdInvite}/join`);
+
+  
+  
+  useEffect(()=>{
+    setName(data?.user?.name);
+    setEmail(data?.user?.email);
+    setHousehold(data?.user?.householdId?.name);
+  },[data,joinByInvitedata,patchedData,postedData,putedData])
 
   const router = useRouter();
   const params = useLocalSearchParams();
