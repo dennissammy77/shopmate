@@ -11,12 +11,12 @@ import usePost from '@/hooks/usePost.hook';
 const ListsScreen = () => {
   let { data: userData, loading: userDataLoading, error: userDataError, refetch: userDataRefetch  } = useFetch(`${API_URL}/api/users/me`);
   const { data: shoppingListsFetched, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
-  const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists`);
+  const { data: postedItemToListData, loading: postDataLoading, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists`);
 
   const [listsData, setlistsData] = useState([]);
   useEffect(()=>{
     setlistsData(shoppingListsFetched);
-  },[shoppingListsFetched,listsDataLoading]);
+  },[shoppingListsFetched,postedItemToListData]);
   
   const [showItemForm, setshowItemForm] = useState(false);
 
@@ -38,8 +38,8 @@ const ListsScreen = () => {
     });
     setName('');
     setDescription('');
+    setshowItemForm(false);
     listsDataRefetch();
-    setshowItemForm(false)
   };
 
   return(

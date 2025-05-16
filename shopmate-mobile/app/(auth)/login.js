@@ -19,6 +19,8 @@ export default function Login() {
       Alert.alert("Error", "Please enter both email and password.");
       return;
     }
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if(!re.test(email)) return Alert.alert("Login failed", "Please enter a valid email.");
     try {
       postData({
         email,
@@ -30,7 +32,7 @@ export default function Login() {
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(err)
-      console.error("Login failed:", error?.response?.data || error?.message);
+      // console.error("Login failed:", error?.response?.data || error?.message);
       Alert.alert("Login failed", error?.response?.data?.message || "Try again");
     }
   };

@@ -22,51 +22,51 @@ export default function CartScreen() {
   const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
   const { data: purchaseData, putData: putPurchaseData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`);
   const { data: recommendshoppingList, loading: recommendshoppingListLoading, error: recommendshoppingListError, postData: recommendShoppingListPosted} = usePost(`${API_URL}/api/households/recommend/list`);
-  
-  useEffect(()=>{
-    if (searchQuery.trim() === '') {
-      setFilteredItems(shoppingList?.items || []);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = shoppingList?.items?.filter(item =>
-        item.name.toLowerCase().includes(query)
-      );
-      setFilteredItems(filtered);
-    }
-  },[searchQuery]);
 
   useEffect(()=>{
     setShoppingList(shoppingListFetched);
-    setFilteredItems(shoppingListFetched?.items || []);
-  },[shoppingListFetched,putedData,shoppingListRefetch,purchaseData,recommendshoppingList]);
+    console.log('items',shoppingListFetched?.items)
+    if (searchQuery.trim() === '') {
+      setFilteredItems(shoppingListFetched?.items || []);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = shoppingListFetched?.items.filter(item =>
+        item?.name?.toLowerCase().includes(query)
+      );
+      setFilteredItems(filtered);
+    }
+  },[searchQuery,shoppingListFetched,recommendshoppingList,listId]);
 
   const handlePurchaseItem = (itemId)=>{
     putPurchaseData({
       itemId,
+    }).then((res)=>{
+      shoppingListRefetch()
     });
-    shoppingListRefetch();
   };
 
   const handleUpdateItem = (itemId,quantity)=>{
     putData({
       itemId,
       quantity,
-    })
-    //console.log('putedData',putedData)
-    shoppingListRefetch();
-    // setShoppingList(putedData)
+    }).then((res)=>{
+      shoppingListRefetch()
+    });
   }
   const handleRecommendList = ()=>{
-    recommendShoppingListPosted();
-    if(recommendshoppingListError){
-      return Alert.alert("Error", "We could not recommend your list");
-    }else{
-      console.log('recommendshoppingList',recommendshoppingList)
-      setShoppingList(recommendshoppingList)
-      // attach listId after the data is created
-      setlistId(recommendshoppingList?._id)
-      router.push(`/(tabs)/cart?listId=${recommendshoppingList?._id}`);
-    }
+    recommendShoppingListPosted().then((res)=>{
+      console.log('res',res)
+      if(res){
+        console.log('recommendshoppingList',res)
+        setShoppingList(res)
+        // attach listId after the data is created
+        setlistId(res?._id)
+        router.push(`/(tabs)/cart?listId=${res?._id}`);
+        return;
+      }else{
+        return Alert.alert("Error", "We could not recommend your list");
+      }
+    });
   };
   const handleClearCart = ()=>{
     setlistId('')
@@ -128,7 +128,7 @@ export default function CartScreen() {
                   {item.name}
                 </Text>
                 <Text style={styles.itemTotal}>
-                  {item.priceInfo?.currency || 'USD'} {item.priceInfo?.price * item?.quantity || 0}
+                  {item.priceInfo?.currency || 'ILS'} {item.priceInfo?.price * item?.quantity || 0}
                 </Text>
               </View>
 

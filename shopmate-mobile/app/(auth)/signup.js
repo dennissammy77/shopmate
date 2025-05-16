@@ -20,6 +20,8 @@ export default function SignUp() {
       Alert.alert("Error", "Please enter both required fields.");
       return;
     }
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if(!re.test(email)) return Alert.alert("SignUp failed", "Please enter a valid email.");
     try {
       postData({
         name,
@@ -30,7 +32,7 @@ export default function SignUp() {
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(error)
-      console.error("SignUp failed:", error?.response?.data || error?.message);
+      // console.error("SignUp failed:", error?.response?.data || error?.message);
       Alert.alert("SignUp failed", error?.response?.data?.message || "Try again");
     }
   };
