@@ -212,7 +212,7 @@ const ProfileScreen = () => {
                       // Dismissed
                     }
                   } catch (error) {
-                    console.error(error.message);
+                    console.log(error.message);
                   }
                 }}
                 style={{ marginVertical: 5 }}

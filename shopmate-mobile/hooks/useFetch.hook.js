@@ -29,7 +29,7 @@ function useFetch(url) {
             setLoading(false)
             setError('An error occurred.',err)
         })
-      }, [url]);
+    }, [url]);
   
     useEffect(() => {
         fetchData()
