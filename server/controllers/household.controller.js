@@ -178,7 +178,7 @@ router.post('/recommend/list', async (req, res) => {
 
     // 3. Send data to recommendation API
     const { data: recommendedItems } = await axios.post(
-      'https://recommend-vfaq.onrender.com/recommend',
+      `${process.env.RECOMMEND_URL}/recommend`,
       { cart: allItemNames }
       // { cart: ['meat','cheese'] }
     );
