@@ -17,6 +17,7 @@ const householdsRoutes = require('./controllers/household.controller.js');
 const shoppinglistRoutes = require('./controllers/shoppingList.controller.js');
 const priceRoutes = require('./controllers/price.controller.js');
 const protectedRoutes = require('./controllers/protected.controller.js');
+const seedDb = require('./seed.js')
 
 
 app.use(express.json());
@@ -43,6 +44,10 @@ app.get('/',(req,res)=>{
 // // Use routers
 // app.use('/api', protectedRouter); // All protected routes
 
+app.get('/api/seed', (req,res)=>{
+	seedDb();
+	return res.status(200).send('Data successfully seeded')
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/households', authMiddleware, householdsRoutes);

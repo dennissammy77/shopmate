@@ -19,6 +19,8 @@ export default function Login() {
       Alert.alert("Error", "Please enter both email and password.");
       return;
     }
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if(!re.test(email)) return Alert.alert("Login failed", "Please enter a valid email.");
     try {
       postData({
         email,
@@ -30,8 +32,8 @@ export default function Login() {
       login(token, JSON.stringify(user)); // You can pass this data to AuthContext
     } catch (err) {
       console.log(err)
-      console.error("Login failed:", error.response?.data || error.message);
-      Alert.alert("Login failed", error.response?.data?.message || "Try again");
+      // console.error("Login failed:", error?.response?.data || error?.message);
+      Alert.alert("Login failed", error?.response?.data?.message || "Try again");
     }
   };
 
@@ -39,6 +41,7 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>Login to ShopMate</Text>
 
+      <Text style={styles.label}>Email</Text>
       <TextInput
         placeholder="Email"
         value={email}
@@ -47,10 +50,10 @@ export default function Login() {
         autoCapitalize="none"
         keyboardType="email-address"
       />
-
+      <Text style={styles.label}>Password</Text>
       <TextInput
         placeholder="Password"
-        value={password}
+        value={password}rd
         onChangeText={setPassword}
         style={styles.input}
         secureTextEntry
@@ -71,7 +74,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.light.base,
   },
   title: {
     fontSize: 24,
@@ -91,6 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     paddingHorizontal: 12,
+    backgroundColor: Colors.light.white,
   },
   saveButton: {
     backgroundColor: Colors.light.primary,

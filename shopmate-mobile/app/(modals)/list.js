@@ -12,43 +12,43 @@ import usePut from '@/hooks/usePut.hook';
 import ModalPopup from '@/components/ModalPopup';
 import usePatch from '@/hooks/usePatch.hook';
 
-const mockPriceOptions = [
-  {
-    name: "Organic Bananas",
-    price: 1.29,
-    currency: "USD",
-    storeName: "Walmart",
-    image: "https://via.placeholder.com/50?text=Walmart",
-  },
-  {
-    name: "Organic Bananas",
-    price: 1.35,
-    currency: "USD",
-    storeName: "Target",
-    image: "https://via.placeholder.com/50?text=Target",
-  },
-  {
-    name: "Organic Bananas",
-    price: 1.19,
-    currency: "USD",
-    storeName: "Costco",
-    image: "https://via.placeholder.com/50?text=Costco",
-  },
-  {
-    name: "Organic Bananas",
-    price: 1.45,
-    currency: "USD",
-    storeName: "Whole Foods",
-    image: "https://via.placeholder.com/50?text=WholeFoods",
-  },
-  {
-    name: "Organic Bananas",
-    price: 1.25,
-    currency: "USD",
-    storeName: "Trader Joe's",
-    image: "https://via.placeholder.com/50?text=TraderJoes",
-  },
-];
+// const mockPriceOptions = [
+//   {
+//     name: "Organic Bananas",
+//     price: 1.29,
+//     currency: "ILS",
+//     storeName: "Walmart",
+//     image: "https://via.placeholder.com/50?text=Walmart",
+//   },
+//   {
+//     name: "Organic Bananas",
+//     price: 1.35,
+//     currency: "ILS",
+//     storeName: "Target",
+//     image: "https://via.placeholder.com/50?text=Target",
+//   },
+//   {
+//     name: "Organic Bananas",
+//     price: 1.19,
+//     currency: "ILS",
+//     storeName: "Costco",
+//     image: "https://via.placeholder.com/50?text=Costco",
+//   },
+//   {
+//     name: "Organic Bananas",
+//     price: 1.45,
+//     currency: "ILS",
+//     storeName: "Whole Foods",
+//     image: "https://via.placeholder.com/50?text=WholeFoods",
+//   },
+//   {
+//     name: "Organic Bananas",
+//     price: 1.25,
+//     currency: "ILS",
+//     storeName: "Trader Joe's",
+//     image: "https://via.placeholder.com/50?text=TraderJoes",
+//   },
+// ];
 
 
 export default function ModalScreen() {
@@ -58,14 +58,18 @@ export default function ModalScreen() {
   const [filteredItems, setFilteredItems] = useState([]);
   const [visible, setVisible] = useState(false);
   const [visibleItem, setVisibleItem] = useState(null);
+  const [mockPriceOptions, setmockPriceOptions] = useState([]);
+
   const openPopup = (item) => {
     setVisible(true);
     setVisibleItem(item)
+    priceFetcherApi(item?.name)
   }
 
   const closePopup = () => {
     setVisible(false);
     setVisibleItem(null)
+    setmockPriceOptions([])
   }
   
   ////console.log(listId)
@@ -77,22 +81,18 @@ export default function ModalScreen() {
   const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
   
   useEffect(()=>{
+    setShoppingList(shoppingListFetched);
+    console.log('items',shoppingListFetched?.items)
     if (searchQuery.trim() === '') {
-      setFilteredItems(shoppingList?.items || []);
+      setFilteredItems(shoppingListFetched?.items || []);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = shoppingList?.items.filter(item =>
-        item.name.toLowerCase().includes(query)
+      const filtered = shoppingListFetched?.items.filter(item =>
+        item?.name?.toLowerCase().includes(query)
       );
       setFilteredItems(filtered);
     }
-  },[searchQuery]);
-
-  useEffect(()=>{
-    setShoppingList(shoppingListFetched);
-    setFilteredItems(shoppingListFetched?.items || []);
-    console.log(shoppingListFetched?.items)
-  },[shoppingListFetched,putedData,postedItemToListData,deletedItemToListData,patchedItemToListData]);
+  },[searchQuery,shoppingListFetched,putedData]);
 
   ////console.log(shoppingList);
   const [showItemForm, setshowItemForm] = useState(false);
@@ -118,39 +118,77 @@ export default function ModalScreen() {
       return;
     }
 
-    postItemToList({ name, quantity: quantityNum });
-    setName('');
-    setQuantity('');
-    shoppingListRefetch();
-    setshowItemForm(false)
+    postItemToList({ name, quantity: quantityNum }).then((res)=>{
+      setName('');
+      setQuantity('');
+      setshowItemForm(false)
+      // console.log('postedItemToListData',res?.items)
+      setFilteredItems(res?.items || filteredItems);
+    });
   };
 
   const handleDeleteItem = (itemId)=>{
-    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`);
-    shoppingListRefetch()
+    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`).then((res)=>{
+      shoppingListRefetch()
+    });
   };
 
   const handleUpdateItem = (itemId,quantity)=>{
     putData({
       itemId,
       quantity,
-    })
-    ////console.log('putedData',putedData)
-    shoppingListRefetch();
-    // setShoppingList(putedData)
+    }).then((res)=>{
+      shoppingListRefetch()
+    });
+  };
+
+  const priceFetcherApi=async(itemName)=>{
+    const url = `https://real-time-amazon-data.p.rapidapi.com/search?query=${itemName}&page=1&country=US&sort_by=RELEVANCE&product_condition=ALL&is_prime=false&deals_and_discounts=NONE`;
+    const options = {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': '8bb0b33c9fmsh5db3bc8c9645717p107dfdjsna5195e6d6c9e',
+        'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com'
+      }
+    };
+
+    try {
+      const response = await fetch(url, options);
+      let result = await response.text();
+      result = JSON.parse(result);
+      // console.log('products',result?.data?.products);
+      result = result?.data?.products?.map((product)=>{
+        let price = product?.product_price?.split('')
+        price?.splice(0, 1);
+        console.log(price)
+        price = price?.join('');
+        console.log(price)
+        return({
+          name: product?.product_title || itemName,
+          price: price || 0,
+          currency: "ILS",
+          storeName: product?.asin || "Trader Joe's",
+          image: product?.product_photo || "https://via.placeholder.com/50?text=TraderJoes",
+        })
+      });
+      console.log(result);
+      setmockPriceOptions(result);
+    } catch (error) {
+      console.log(error);
+    }
   }
   
-  const handleUpdateItemPrice = (itemId,storeName,price,currency='USD')=>{
+  const handleUpdateItemPrice = (itemId,storeName,price,currency='ILS')=>{
     if(!itemId) return console.log('No Item Id found',itemId,storeName,price)
     console.log('Item Id found',itemId,storeName,price)
     patchItemInList({
       storeName,
       price,
       currency
-    },`/${itemId}/price`)
-    ////console.log('patchedData',patchedItemToListData)
-    closePopup()
-    shoppingListRefetch();
+    },`/${itemId}/price`).then((res)=>{
+      closePopup()
+      shoppingListRefetch()
+    });
   } 
 
   return (
@@ -222,7 +260,7 @@ export default function ModalScreen() {
                   {item.name}
                 </Text>
                 <Text style={styles.itemTotal}>
-                  {item.priceInfo?.currency || 'USD'} {item.priceInfo?.price * item?.quantity || 0}
+                  {item.priceInfo?.currency || 'ILS'} {item.priceInfo?.price * item?.quantity || 0}
                 </Text>
               </View>
 
@@ -231,7 +269,7 @@ export default function ModalScreen() {
                 @ {item.priceInfo?.storeName || 'no store'}
               </Text>
               <Text style={styles.itemStore}>
-                price USD {item.priceInfo?.price || 'no store'} / item
+                price ILS {item.priceInfo?.price || 'no store'} / item
               </Text>
 
               {/* Added by / Modified by */}
@@ -272,14 +310,14 @@ export default function ModalScreen() {
         isVisible={visible}
         transparent={true}
         dismiss={closePopup}
-        title={'Compare Prices'}
+        title={`Compare ${visibleItem?.name} Prices`}
       >
         <ScrollView contentContainerStyle={styles.priceList}>
           {mockPriceOptions?.map((option, index) => (
             <TouchableOpacity
               key={index}
               style={styles.priceCard}
-              onPress={() => handleUpdateItemPrice(visibleItem?._id,option.storeName,option.price)} // This would apply the selected price to the item
+              onPress={() => handleUpdateItemPrice(visibleItem?._id,option.storeName,parseInt(option.price))} // This would apply the selected price to the item
             >
               <Image
                 source={{ uri: option.image || 'https://via.placeholder.com/50' }}
