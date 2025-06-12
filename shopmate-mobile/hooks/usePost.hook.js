@@ -20,6 +20,7 @@ const usePost = (url) => {
                 },
                 body: JSON.stringify(body),
             });
+            console.log(response)
     
             if (!response.ok) {
                 throw new Error(`An error has occurred: ${response.status}`);
@@ -30,6 +31,7 @@ const usePost = (url) => {
             // toast.success("Created successfully!"); 
             return result;
         } catch (err) {
+            console.log(err)
             setError(err);
         } finally {
             setLoading(false);
