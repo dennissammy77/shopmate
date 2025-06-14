@@ -22,11 +22,14 @@ export const AuthProvider = ({ children }) => {
     })()
   }, []);
   const login = useCallback(async (token,user) => {
-    setIsAuthenticated(true);
-    await AsyncStorage.setItem('@token', token);
-    await AsyncStorage.setItem('@user', user);
-    tokenRef.current = token;
-    router.replace('/(tabs)/cart') // ✅ Redirect to home tab
+    console.log(token,user)
+    if(token && user){
+      setIsAuthenticated(true);
+      await AsyncStorage.setItem('@token', token);
+      await AsyncStorage.setItem('@user', user);
+      tokenRef.current = token;
+      router.replace('/(tabs)/cart') // ✅ Redirect to home tab
+    }
   }, []);
   // ✅ Logout function (Redirect to Auth Screen)
   const logout = useCallback(async () => {

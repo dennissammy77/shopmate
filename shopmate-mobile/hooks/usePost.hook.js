@@ -20,21 +20,24 @@ const usePost = (url) => {
                 },
                 body: JSON.stringify(body),
             });
-    
+            const result = await response.json();
+            console.log('post hook response',response)
+
             if (!response.ok) {
+                setError(result?.error);
                 throw new Error(`An error has occurred: ${response.status}`);
             }
-    
-            const result = await response.json();
+
             setData(result);
-            // toast.success("Created successfully!"); 
             return result;
         } catch (err) {
-            setError(err);
+            console.log('post hook Error',err)
+//            setError(err);
         } finally {
             setLoading(false);
         }
     }, [url]);
+
 
     return { data, loading, error, postData };
 };

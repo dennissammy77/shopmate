@@ -7,97 +7,114 @@ import Colors from '@/constants/Colors.ts'
 import useFetch from '@/hooks/useFetch.hook';
 import { Link } from 'expo-router';
 import usePost from '@/hooks/usePost.hook';
+import { postData } from '@/constants/apiInstance.js';
+import { useAuth } from '@/contexts/AuthContext';
+import moment from 'moment'
 
 const ListsScreen = () => {
-  let { data: userData, loading: userDataLoading, error: userDataError, refetch: userDataRefetch  } = useFetch(`${API_URL}/api/users/me`);
-  const { data: shoppingListsFetched, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
-  const { data: postedItemToListData, loading: postDataLoading, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists`);
+    let { data: userData, loading: userDataLoading, error: userDataError, refetch: userDataRefetch  } = useFetch(`${API_URL}/api/users/me`);
+    const { data: shoppingListsFetched, loading: listsDataLoading, error: listsDataError, refetch: listsDataRefetch  } = useFetch(`${API_URL}/api/shopping-lists/${userData?.user?.householdId?._id}`);
+    const { token } = useAuth();
+    const [listsData, setlistsData] = useState([]);
+    useEffect(()=>{
+        setlistsData(shoppingListsFetched);
+    },[shoppingListsFetched]);
 
-  const [listsData, setlistsData] = useState([]);
-  useEffect(()=>{
-    setlistsData(shoppingListsFetched);
-  },[shoppingListsFetched,postedItemToListData]);
-  
-  const [showItemForm, setshowItemForm] = useState(false);
+    const [showItemForm, setshowItemForm] = useState(false);
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
 
-  console.log(userData)
-  const handleAddItem = () => {
-    if (!userData?.user?.householdId?._id) return console.log('no house hold id found')
-    if (!name || !description) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
-    }
+    console.log(userData);
 
-    postItemToList({ 
-      name, 
-      description, 
-      householdId: userData?.user?.householdId?._id 
-    });
-    setName('');
-    setDescription('');
-    setshowItemForm(false);
-    listsDataRefetch();
-  };
+    const handleAddItem = async()=>{
+        try{
+            if (!userData?.user?.householdId?._id) {
+                Alert.alert("Error", "You have not created/joined a house to manage your shopping lists");
+                return;
+            };
+            if (!name || !description) {
+                Alert.alert('Error', 'Please fill in all required fields.');
+                return;
+            }
+
+            const result = await postData(`${API_URL}/api/shopping-lists`,{ name, description, householdId: userData?.user?.householdId?._id }, token);
+            console.log('response',result)
+            if(result.status){
+                setName('');
+                setDescription('');
+                setshowItemForm(false);
+                listsDataRefetch();
+                return Alert.alert("List created", "successfully");
+            }else{
+                console.log(result?.result?.error);
+                Alert.alert("List created", `Failed: ${result?.result?.error}`);
+            };
+        }catch(err){
+            Alert.alert("List failed", err || "Try again");
+        };
+    };
+    if (listsDataLoading) return (
+        <SafeAreaView style={styles.container}>
+            <ActivityIndicator style={styles.loader} size="large" />
+        </SafeAreaView>
+    );
 
   return(
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>House Shopping lists</Text>
-        <TouchableOpacity style={styles.addButton} onPress={()=>setshowItemForm(!showItemForm)}>
-          <Text style={styles.addButtonText}>{!showItemForm ? "Add List" : "Close"}</Text>
-        </TouchableOpacity>
-      </View>
-      {showItemForm && (
-        <View style={styles.form}>
-          <Text style={styles.label}>New List</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Jakes' shopping"
-            value={name}
-            onChangeText={setName}
-          />
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 1"
-            value={description}
-            onChangeText={setDescription}
-          />
-          <TouchableOpacity style={styles.saveButton} onPress={handleAddItem}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+            <Text style={styles.headerTitle}>House Shopping lists</Text>
+            <TouchableOpacity style={styles.addButton} onPress={()=>setshowItemForm(!showItemForm)}>
+                <Text style={styles.addButtonText}>{!showItemForm ? "Add List" : "Close"}</Text>
+            </TouchableOpacity>
         </View>
-      )}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.listContainer}>
-          {listsDataLoading && (<Text style={styles.listCardParagraph}>Loading</Text>)}
-          {(!listsDataLoading && listsData?.length > 0) ? 
-            (listsData?.map((list) => {
-              return (
-                <Link href={`/(modals)/list?listId=${list?._id}`} asChild key={list?._id}>
-                  <Pressable>
-                    <View style={styles.listCard}>
-                      <View style={styles.row}>
-                        <Text style={styles.listCardTitle}>{list?.name}</Text>
-                        <Text style={styles.listCardParagraph}>{list?.items?.length } items</Text>
-                      </View>
-                      <Text style={styles.listCardSubHeading}>{list?.description}</Text>
-                      <Text style={styles.listCardParagraph}>Created: {list?.createdAt}</Text>            
-                      <Text style={styles.listCardParagraph}>Last updated: {list?.updatedAt}</Text>            
-                    </View>
-                  </Pressable>
-                </Link>
-              );
-            })) 
-            : 
-            (<Text style={styles.listCardParagraph}>No lists found</Text>)
-          }
-        </View>
-      </ScrollView>
+        {showItemForm && (
+            <View style={styles.form}>
+                <Text style={styles.label}>New List</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Jakes' shopping"
+                    value={name}
+                    onChangeText={setName}
+                />
+                <Text style={styles.label}>Description</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 1"
+                    value={description}
+                    onChangeText={setDescription}
+                />
+                <TouchableOpacity style={styles.saveButton} onPress={handleAddItem}>
+                    <Text style={styles.saveButtonText}>Save</Text>
+                </TouchableOpacity>
+            </View>
+        )}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.listContainer}>
+                {listsDataLoading && (<Text style={styles.listCardParagraph}>Loading</Text>)}
+                {(!listsDataLoading && listsData?.length > 0) ?
+                    (listsData?.map((list) => {
+                        return (
+                            <Link href={`/(modals)/list?listId=${list?._id}`} asChild key={list?._id}>
+                                <Pressable>
+                                    <View style={styles.listCard}>
+                                        <View style={styles.row}>
+                                            <Text style={styles.listCardTitle}>{list?.name}</Text>
+                                            <Text style={styles.listCardParagraph}>{list?.items?.length } items</Text>
+                                        </View>
+                                        <Text style={styles.listCardSubHeading}>{list?.description}</Text>
+                                        <Text style={styles.listCardParagraph}>Created: {moment(list?.createdAt).format('MMMM Do YY, h:mm:ss a,')}</Text>
+                                        <Text style={styles.listCardParagraph}>Last updated: {moment(list?.updatedAt).format('MMMM Do YY, h:mm:ss a')}</Text>
+                                    </View>
+                                </Pressable>
+                            </Link>
+                        );
+                    }))
+                :
+                (<Text style={styles.listCardParagraph}>No lists found</Text>)}
+            </View>
+        </ScrollView>
     </SafeAreaView>
   )
 };

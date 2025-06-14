@@ -9,6 +9,8 @@ import useFetch from '@/hooks/useFetch.hook';
 import usePost from '@/hooks/usePost.hook';
 import useDelete from '@/hooks/useDelete.hook';
 import usePut from '@/hooks/usePut.hook';
+import { postData, putData, fetchData, deleteData, patchData } from '@/constants/apiInstance.js';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CartScreen() {
   const params = useLocalSearchParams();
@@ -16,77 +18,141 @@ export default function CartScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [shoppingList, setShoppingList] = useState({});
   const [filteredItems, setFilteredItems] = useState([]);
+  const { token } = useAuth();
   
   //console.log(listId)
   let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
-  const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
-  const { data: purchaseData, putData: putPurchaseData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`);
+//  const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
+//  const { data: purchaseData, putData: putPurchaseData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`);
   const { data: recommendshoppingList, loading: recommendshoppingListLoading, error: recommendshoppingListError, postData: recommendShoppingListPosted} = usePost(`${API_URL}/api/households/recommend/list`);
 
-  useEffect(()=>{
-    setShoppingList(shoppingListFetched);
-    console.log('items',shoppingListFetched?.items)
-    if (searchQuery.trim() === '') {
-      setFilteredItems(shoppingListFetched?.items || []);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = shoppingListFetched?.items.filter(item =>
-        item?.name?.toLowerCase().includes(query)
-      );
-      setFilteredItems(filtered);
-    }
-  },[searchQuery,shoppingListFetched,recommendshoppingList,listId]);
+//  useEffect(()=>{
+//    setShoppingList(shoppingListFetched);
+//    console.log('items',shoppingListFetched?.items)
+//    if (searchQuery.trim() === '') {
+//      setFilteredItems(shoppingListFetched?.items || []);
+//    } else {
+//      const query = searchQuery.toLowerCase();
+//      const filtered = shoppingListFetched?.items.filter(item =>
+//        item?.name?.toLowerCase().includes(query)
+//      );
+//      setFilteredItems(filtered);
+//    }
+//  },[searchQuery,shoppingListFetched,recommendshoppingList,listId]);
+    useEffect(()=>{
+      handleFetchList()
+    },[searchQuery,listId]);
 
-  const handlePurchaseItem = (itemId)=>{
-    putPurchaseData({
-      itemId,
-    }).then((res)=>{
-      shoppingListRefetch()
-    });
-  };
+    const handleFetchList = async()=>{
+        if (!listId) return;
+        const result = await fetchData(`${API_URL}/api/shopping-lists/list/${listId}`,token);
+        console.log(result)
+        if(result.status){
+            setShoppingList(result?.result);
+            console.log('items',result?.result?.items)
+            if (searchQuery.trim() === '') {
+                setFilteredItems(result?.result?.items || []);
+            } else {
+                const query = searchQuery.toLowerCase();
+                const filtered = result?.result?.items.filter(item =>
+                    item?.name?.toLowerCase().includes(query)
+                );
+                setFilteredItems(filtered);
+            }
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("Items could not be retrieved", result?.result?.error || "Try again");
+        };
+    };
 
-  const handleUpdateItem = (itemId,quantity)=>{
-    putData({
-      itemId,
-      quantity,
-    }).then((res)=>{
-      shoppingListRefetch()
-    });
-  }
-  const handleRecommendList = ()=>{
-    recommendShoppingListPosted().then((res)=>{
-      console.log('res',res)
-      if(res){
-        console.log('recommendshoppingList',res)
-        setShoppingList(res)
-        // attach listId after the data is created
-        setlistId(res?._id)
-        router.push(`/(tabs)/cart?listId=${res?._id}`);
-        return;
-      }else{
-        return Alert.alert("Error", "We could not recommend your list");
+    const handlePurchaseItem = async(itemId)=>{
+        try {
+          if (!itemId) {
+            Alert.alert("Error", "Item Id missing");
+            return;
+          }
+          const result = await putData(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`,{ itemId },token)
+          if(result?.status){
+              await handleFetchList()
+          }else{
+            console.log(result?.result?.error);
+          };
+      } catch (err) {
+        console.log(err)
       }
-    });
-  };
-  const handleClearCart = ()=>{
-    setlistId('')
-  };
+    };
+    const handleUpdateItem = async (itemId,quantity,status)=>{
+        console.log(status)
+        try {
+            const quantityNum = parseInt(quantity);
+            if (!itemId) {
+                Alert.alert("Error", "Item Id missing");
+                return;
+            }
+            if (status === 'purchased') {
+                Alert.alert("Warning", "Item is already purchased");
+                return;
+            }
+            if (quantityNum <= 0) {
+                Alert.alert("Error", "Quantity can not be zero");
+                return;
+            };
+            const result = await putData(`${API_URL}/api/shopping-lists/list/${listId}/item/update`,{ itemId, quantity: quantityNum },token)
+            if(result?.status){
+                await handleFetchList()
+            }else{
+                console.log(result?.result?.error);
+                Alert.alert("Quantity update", "Failed, Try again");
+            };
+        } catch (err) {
+            console.log(err)
+            Alert.alert("Quantity update", err || "Try again");
+        }
+    };
 
-  if(!listId) {
-    return(
-      <SafeAreaView style={styles.centeredPage}>
-        <Text style={styles.title}>Select a list to start shopping</Text>
-        {/* <Link href='/(tabs)/lists'>Go to your shopping lists</Link> */}
-        <TouchableOpacity style={styles.secondaryButtonIcon} onPress={()=>router.push(`/(tabs)/lists`)}>
-          <Text style={styles.secondaryButtonText}>Go to your shopping lists</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>or</Text>
-        <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handleRecommendList()}>
-          <Text style={styles.purchaseButtonText}>Recommend me a list</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    )
-  }  
+    const handleRecommendList = async()=>{
+        const result = await postData(`${API_URL}/api/households/recommend/list`,{},token);
+        if(result.status){
+            setlistId(result?.result?._id);
+            await handleFetchList();
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("We could not recommend your list", result?.result?.error || result?.result?.message || "Try again");
+        };
+//        recommendShoppingListPosted().then((res)=>{
+//            console.log('res',res)
+//            if(res){
+//                console.log('recommendshoppingList',res)
+//                setShoppingList(res)
+//                // attach listId after the data is created
+//                setlistId(res?._id)
+//                router.push(`/(tabs)/cart?listId=${res?._id}`);
+//                return;
+//            }else{
+//                return Alert.alert("Error", "We could not recommend your list");
+//            }
+//        });
+    };
+
+    const handleClearCart = ()=>{
+        setlistId('')
+    };
+
+    if(!listId) {
+        return(
+          <SafeAreaView style={styles.centeredPage}>
+            <Text style={styles.title}>Select a list to start shopping</Text>
+            {/* <Link href='/(tabs)/lists'>Go to your shopping lists</Link> */}
+            <TouchableOpacity style={styles.secondaryButtonIcon} onPress={()=>router.push(`/(tabs)/lists`)}>
+              <Text style={styles.secondaryButtonText}>Go to your shopping lists</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>or</Text>
+            <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handleRecommendList()}>
+              <Text style={styles.purchaseButtonText}>Recommend me a list</Text>
+            </TouchableOpacity>
+          </SafeAreaView>
+        )
+    }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -152,16 +218,18 @@ export default function CartScreen() {
 
               {/* Controls: -, quantity, +, remove */}
               <View style={styles.controls}>
-                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity - 1)}}>
+                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity - 1,item.status)}}>
                   <Text style={styles.controlText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{item.quantity}</Text>
-                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity + 1)}}>
+                <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity + 1,item.status)}}>
                   <Text style={styles.controlText}>+</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handlePurchaseItem(item?._id)}>
-                  <Text style={styles.purchaseButtonText}>purchase</Text>
-                </TouchableOpacity>
+                {item.status === 'purchased'? '' :
+                    <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handlePurchaseItem(item?._id)}>
+                      <Text style={styles.purchaseButtonText}>purchase</Text>
+                    </TouchableOpacity>
+                }
               </View>
             </View>
           </View>
