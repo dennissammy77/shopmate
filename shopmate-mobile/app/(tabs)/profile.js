@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import useFetch from '@/hooks/useFetch.hook.js';
-import usePatch from '@/hooks/usePatch.hook.js';
-import usePut from '@/hooks/usePut.hook.js';
-import usePost from '@/hooks/usePost.hook.js';
 import { API_URL } from '@/constants/config';
+import { postData, putData } from '@/constants/apiInstance.js';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import Colors from '@/constants/Colors.ts'
@@ -20,21 +18,14 @@ const ProfileScreen = () => {
   const [newhousehold, setNewHousehold] = useState(false);
   const [household, setHousehold] = useState('');
   const [householdIdInvite, setHouseholdIdInvite] = useState('');
-  const { logout } = useAuth();
-  // const [user, setUser] = useState(null);
-  let { data, loading, error, refetch  } = useFetch(`${API_URL}/api/users/me`);
-  const { data: patchedData, patchData } = usePatch(`${API_URL}/api/users/me`);
-  const { data: putedData, putData } = usePut(`${API_URL}/api/users/me`);
-  const { data: postedData, postData } = usePost(`${API_URL}/api/households`);
-  const { data: joinByInvitedata, postData: joinByInvite } = usePost(`${API_URL}/api/households/${householdIdInvite}/join`);
-
-  
+  const { logout,token } = useAuth();
+  let { data, loading, error, refetch } = useFetch(`${API_URL}/api/users/me`);
   
   useEffect(()=>{
     setName(data?.user?.name);
     setEmail(data?.user?.email);
     setHousehold(data?.user?.householdId?.name);
-  },[data,joinByInvitedata,patchedData,postedData,putedData])
+  },[data])
 
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -47,57 +38,64 @@ const ProfileScreen = () => {
   };
 
   const handleUpdate = async() => {
-    if (!name) {
-      Alert.alert("Error", "Please enter required inputs");
-      return;
-    }
     try {
-      putData({
-        name,
-      });
-      console.log('putedData',putedData);
-      refetch()
+        if (!name) {
+          Alert.alert("Error", "User name cannot be empty");
+          return;
+        }
+        const result = await putData(`${API_URL}/api/users/me`,{ name },token)
+        if(result.status){
+            refetch()
+            return Alert.alert("Profile update", "successful");
+        }else{
+          console.log(result?.result?.error);
+          Alert.alert("Profile update", "Failed, Try again");
+        };
     } catch (err) {
-      console.log(error)
-      Alert.alert("Update failed", error.response?.data?.message || "Try again");
+      console.log(err)
+      Alert.alert("Update failed", err || "Try again");
     }
   };
 
   const handleCreateHouse = async()=>{
-    if (!household) {
-      Alert.alert("Error", "Please enter required inputs");
-      return;
-    }
-    try {
-      postData({
-        name: household,
-      });
-      console.log('postedData',postedData);
-      refetch()
-    } catch (err) {
-      console.log(error)
-      Alert.alert("Creation failed", error.response?.data?.message || "Try again");
-    }
+    try{
+        if (!household) {
+          Alert.alert("Error", "Please enter required inputs");
+          return;
+        };
+
+        const result = await postData(`${API_URL}/api/households`,{ name: household }, token);
+        console.log('response',result)
+        if(result.status){
+            refetch()
+            return Alert.alert("House Account created", "successfully");
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("House Account failed", `Failed: ${result?.result?.error}`);
+        };
+    }catch(err){
+        Alert.alert("House Account failed", err || "Try again");
+    };
   };
 
   const handleJoinHouse = async()=>{
-    console.log('householdIdInvite',householdIdInvite)
-    if (!householdIdInvite) {
-      Alert.alert("Error", "Please enter a valid household Id");
-      return;
-    }
-    console.log('started')
-    console.log('continue')
-    
-    try {
-      joinByInvite();
-      console.log('postedData',data);
-      Alert.alert("Success", "You joined this house!");;
-      refetch()
-    } catch (err) {
-      console.log(error)
-      Alert.alert("Could not join this house!", error.response?.data?.message || "Try again");
-    }
+    try{
+      if (!householdIdInvite) {
+        Alert.alert("Error", "Please enter a valid household Id");
+        return;
+      };
+      const result = await postData(`${API_URL}/api/households/${householdIdInvite}/join`, null , token);
+      console.log('response',result)
+      if(result.status){
+          refetch()
+          return Alert.alert("Success", "You joined this house!");
+      }else{
+          console.log(result?.result?.error);
+          Alert.alert("Could not join this house!", `Failed: ${result?.result?.error}`);
+      };
+    }catch(err){
+      Alert.alert("Could not join this house!", err || "Try again");
+    };
   };
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
@@ -152,19 +150,20 @@ const ProfileScreen = () => {
             />
           </View>
           <View style={styles.householdHeader}>
-            <Text style={styles.label}>Household</Text>
+            <Text style={styles.label}>My house</Text>
             {!data?.user?.householdId && (
               <TouchableOpacity onPress={()=>setNewHousehold(true)}>
-                <Text style={styles.saveButtonText}>add</Text>
+                <Text style={styles.saveButtonText}>Create | Join a house</Text>
               </TouchableOpacity>
             )}
           </View>
           {!data?.user?.householdId && (
-            <Text style={styles.label}>Your account is not linked to a household.</Text>
+            <Text style={styles.label}>Your account is not linked to a house.</Text>
           )}
+          <View style={{ borderBottomColor: '#ccc', borderBottomWidth: 1, marginVertical: 10 }} />
           {(!data?.user?.householdId && newhousehold) && (
             <View>
-              <Text style={styles.label}>Household Name</Text>
+              <Text style={styles.label}>Create a new House Account</Text>
               <TextInput
                 style={styles.input}
                 value={household}
@@ -174,6 +173,7 @@ const ProfileScreen = () => {
               <TouchableOpacity onPress={()=>handleCreateHouse()}>
                 <Text style={styles.saveButtonText}>save</Text>
               </TouchableOpacity>
+              <View style={{ borderBottomColor: '#ccc', borderBottomWidth: 1, marginVertical: 10 }} />
               <Text style={styles.label}>or join one</Text>
               <TextInput
                 style={styles.input}
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    padding: 16,
+    padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },

@@ -21,6 +21,7 @@ const seedDb = require('./seed.js')
 
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
 	credentials: true,
@@ -29,7 +30,7 @@ app.use(cors({
 
 /**************************ENDPOINTS**************************************/
 app.get('/',(req,res)=>{
-    return res.send('Hello World!!')
+    return res.send('Hello World!!!')
 })
 
 /**************************ROUTES********************************/

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "dev": "npx nodemon server.js",
+    "seed": "node seed.js",
     "start": "node server.js"
   },
   "author": "",

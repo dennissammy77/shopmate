@@ -35,7 +35,7 @@ async function seedDb() {
       for (let j = 0; j < numUsers; j++) {
         const user = new User({
           email: faker.internet.email().toLowerCase(),
-          passwordHash: await bcrypt.hash('password123', 10),
+          passwordHash : 'password123',
           name: faker.person.fullName(),
           householdId: household._id,
           preferences: {

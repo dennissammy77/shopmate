@@ -174,7 +174,7 @@ router.post('/recommend/list', async (req, res) => {
     const allItemNames = shoppingLists.flatMap(list =>
       list.items.map(item => item.name.toLowerCase())
     );
-    console.log(allItemNames)
+    console.log('allItemNames',allItemNames)
 
     // 3. Send data to recommendation API
     const { data: recommendedItems } = await axios.post(
@@ -182,7 +182,7 @@ router.post('/recommend/list', async (req, res) => {
       { cart: allItemNames }
       // { cart: ['meat','cheese'] }
     );
-    console.log(recommendedItems)
+    console.log('recommendedItems',recommendedItems)
 
     if (!Array.isArray(recommendedItems?.recommended_products) || recommendedItems?.recommended_products.length === 0) {
       return res.status(400).json({ message: 'No recommendations received.' });

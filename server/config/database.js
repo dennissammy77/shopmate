@@ -9,7 +9,7 @@ const connectionString = `mongodb+srv://${username}:${password}@${connection_end
 
 exports.connect=()=>{
 	mongoose.connect(connectionString).then(()=>{
-		LOGGER.log('info',`Db connected successfully!`);
+		LOGGER.log('info',`Db connected successfully!${connectionString}`);
 	}).catch((err)=>{
 		LOGGER.log('error',`Error while connecting database!\n${err}`);
 		throw new Error('Error while connecting database')

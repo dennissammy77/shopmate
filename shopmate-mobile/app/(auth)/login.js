@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import axios from 'axios';
 import usePost from '@/hooks/usePost.hook.js';
-import { API_URL } from '@/constants/config.js'
+import { API_URL } from '@/constants/config.js';
+import { postData } from '@/constants/apiInstance.js';
 import { router } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 import Colors from '@/constants/Colors';
@@ -12,29 +13,30 @@ export default function Login() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { data: response, error, postData } = usePost(`${API_URL}/api/auth/login`);
-
   const handleLogin = async() => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password.");
-      return;
-    }
-    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if(!re.test(email)) return Alert.alert("Login failed", "Please enter a valid email.");
-    try {
-      postData({
-        email,
-        password,
-      });
-      const { token, user } = response;
-      console.log('token',token)
-      console.log('user',user)
-      login(token, JSON.stringify(user)); // You can pass this data to AuthContext
-    } catch (err) {
-      console.log(err)
-      // console.error("Login failed:", error?.response?.data || error?.message);
-      Alert.alert("Login failed", error?.response?.data?.message || "Try again");
-    }
+    try{
+        if (!email || !password) {
+            Alert.alert("Validation Error", "Please enter both email and password.");
+            return;
+        };
+        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if(!re.test(email)) return Alert.alert("Login failed", "Please enter a valid email.");
+
+        const result = await postData(`${API_URL}/api/auth/login`,{ email, password },null);
+        console.log('response',result)
+        if(result.status){
+            const { token, user } = result?.result;
+            console.log('token',token)
+            console.log('user',user)
+            login(token, JSON.stringify(user)); // You can pass this data to AuthContext
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("Login failed", result?.result?.error || "Try again");
+        };
+    }catch(err){
+        console.log("Login function",err)
+        Alert.alert("Login failed", err || "Try again");
+    };
   };
 
   return (

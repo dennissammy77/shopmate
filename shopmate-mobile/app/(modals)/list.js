@@ -5,191 +5,194 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { API_URL } from '@/constants/config';
-import useFetch from '@/hooks/useFetch.hook';
-import usePost from '@/hooks/usePost.hook';
-import useDelete from '@/hooks/useDelete.hook';
-import usePut from '@/hooks/usePut.hook';
 import ModalPopup from '@/components/ModalPopup';
-import usePatch from '@/hooks/usePatch.hook';
-
-// const mockPriceOptions = [
-//   {
-//     name: "Organic Bananas",
-//     price: 1.29,
-//     currency: "ILS",
-//     storeName: "Walmart",
-//     image: "https://via.placeholder.com/50?text=Walmart",
-//   },
-//   {
-//     name: "Organic Bananas",
-//     price: 1.35,
-//     currency: "ILS",
-//     storeName: "Target",
-//     image: "https://via.placeholder.com/50?text=Target",
-//   },
-//   {
-//     name: "Organic Bananas",
-//     price: 1.19,
-//     currency: "ILS",
-//     storeName: "Costco",
-//     image: "https://via.placeholder.com/50?text=Costco",
-//   },
-//   {
-//     name: "Organic Bananas",
-//     price: 1.45,
-//     currency: "ILS",
-//     storeName: "Whole Foods",
-//     image: "https://via.placeholder.com/50?text=WholeFoods",
-//   },
-//   {
-//     name: "Organic Bananas",
-//     price: 1.25,
-//     currency: "ILS",
-//     storeName: "Trader Joe's",
-//     image: "https://via.placeholder.com/50?text=TraderJoes",
-//   },
-// ];
-
+import { postData, putData, fetchData, deleteData, patchData } from '@/constants/apiInstance.js';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ModalScreen() {
-  const { listId } = useLocalSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [shoppingList, setShoppingList] = useState({});
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [visible, setVisible] = useState(false);
-  const [visibleItem, setVisibleItem] = useState(null);
-  const [mockPriceOptions, setmockPriceOptions] = useState([]);
+    const { listId } = useLocalSearchParams();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [shoppingList, setShoppingList] = useState({});
+    const [filteredItems, setFilteredItems] = useState([]);
+    const [visible, setVisible] = useState(false);
+    const [visibleItem, setVisibleItem] = useState(null);
+    const [mockPriceOptions, setmockPriceOptions] = useState([]);
+    const { token } = useAuth();
 
-  const openPopup = (item) => {
-    setVisible(true);
-    setVisibleItem(item)
-    priceFetcherApi(item?.name)
-  }
-
-  const closePopup = () => {
-    setVisible(false);
-    setVisibleItem(null)
-    setmockPriceOptions([])
-  }
-  
-  ////console.log(listId)
-  let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
-  const { data: postedItemToListData, error, postData: postItemToList } = usePost(`${API_URL}/api/shopping-lists/list/${listId}/item/add`);
-  const { data: patchedItemToListData, patchData: patchItemInList } = usePatch(`${API_URL}/api/shopping-lists/list/${listId}/item`);
-  const { data: deletedItemToListData, deleteData: deleteItemFromList } = useDelete();
-  const { data: deletedListData, deleteData: deleteList } = useDelete();
-  const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
-  
-  useEffect(()=>{
-    setShoppingList(shoppingListFetched);
-    console.log('items',shoppingListFetched?.items)
-    if (searchQuery.trim() === '') {
-      setFilteredItems(shoppingListFetched?.items || []);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = shoppingListFetched?.items.filter(item =>
-        item?.name?.toLowerCase().includes(query)
-      );
-      setFilteredItems(filtered);
-    }
-  },[searchQuery,shoppingListFetched,putedData]);
-
-  ////console.log(shoppingList);
-  const [showItemForm, setshowItemForm] = useState(false);
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState('');
-
-  const handleDeleteList = ()=>{
-    deleteList(`${API_URL}/api/shopping-lists/list/${listId}`);
-    shoppingListRefetch()
-    router.replace(`/(tabs)/lists`)
-    //68154187a401c2c191a554a9
-  };
-
-  const handleAddItem = () => {
-    if (!name || !quantity) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
+    const openPopup = (item) => {
+        setVisible(true);
+        setVisibleItem(item)
+        priceFetcherApi(item?.name)
     }
 
-    const quantityNum = parseInt(quantity);
-    if (isNaN(quantityNum) || quantityNum <= 0) {
-      Alert.alert('Invalid Quantity', 'Quantity must be a positive number.');
-      return;
+    const closePopup = () => {
+        setVisible(false);
+        setVisibleItem(null)
+        setmockPriceOptions([])
     }
 
-    postItemToList({ name, quantity: quantityNum }).then((res)=>{
-      setName('');
-      setQuantity('');
-      setshowItemForm(false)
-      // console.log('postedItemToListData',res?.items)
-      setFilteredItems(res?.items || filteredItems);
-    });
-  };
+    useEffect(()=>{
+        handleFetchList()
+    },[searchQuery]);
 
-  const handleDeleteItem = (itemId)=>{
-    deleteItemFromList(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`).then((res)=>{
-      shoppingListRefetch()
-    });
-  };
+    const [showItemForm, setshowItemForm] = useState(false);
+    const [name, setName] = useState('');
+    const [quantity, setQuantity] = useState('');
 
-  const handleUpdateItem = (itemId,quantity)=>{
-    putData({
-      itemId,
-      quantity,
-    }).then((res)=>{
-      shoppingListRefetch()
-    });
-  };
-
-  const priceFetcherApi=async(itemName)=>{
-    const url = `https://real-time-amazon-data.p.rapidapi.com/search?query=${itemName}&page=1&country=US&sort_by=RELEVANCE&product_condition=ALL&is_prime=false&deals_and_discounts=NONE`;
-    const options = {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-key': '8bb0b33c9fmsh5db3bc8c9645717p107dfdjsna5195e6d6c9e',
-        'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com'
-      }
+    const handleFetchList = async()=>{
+        const result = await fetchData(`${API_URL}/api/shopping-lists/list/${listId}`,token);
+        console.log(result)
+        if(result.status){
+            setShoppingList(result?.result);
+            console.log('items',result?.result?.items)
+            if (searchQuery.trim() === '') {
+                setFilteredItems(result?.result?.items || []);
+            } else {
+                const query = searchQuery.toLowerCase();
+                const filtered = result?.result?.items.filter(item =>
+                    item?.name?.toLowerCase().includes(query)
+                );
+                setFilteredItems(filtered);
+            }
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("Items could not be retrieved", result?.result?.error || "Try again");
+        };
     };
 
-    try {
-      const response = await fetch(url, options);
-      let result = await response.text();
-      result = JSON.parse(result);
-      // console.log('products',result?.data?.products);
-      result = result?.data?.products?.map((product)=>{
-        let price = product?.product_price?.split('')
-        price?.splice(0, 1);
-        console.log(price)
-        price = price?.join('');
-        console.log(price)
-        return({
-          name: product?.product_title || itemName,
-          price: price || 0,
-          currency: "ILS",
-          storeName: product?.asin || "Trader Joe's",
-          image: product?.product_photo || "https://via.placeholder.com/50?text=TraderJoes",
-        })
-      });
-      console.log(result);
-      setmockPriceOptions(result);
-    } catch (error) {
-      console.log(error);
+    const handleDeleteList = async()=>{
+        if (!listId) {
+            Alert.alert('Error Deleting List', '');
+            return;
+        };
+        const result = await deleteData(`${API_URL}/api/shopping-lists/list/${listId}`,token);
+        if(result.status){
+            Alert.alert("List deleted",);
+            router.replace(`/(tabs)/lists`)
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("List could not be deleted", result?.result?.error || "Try again");
+        };
+    };
+
+    const handleAddItem = async() => {
+        if (!name || !quantity) {
+            Alert.alert('Error', 'Please fill in all fields.');
+            return;
+        }
+
+        const quantityNum = parseInt(quantity);
+        if (isNaN(quantityNum) || quantityNum <= 0) {
+            Alert.alert('Invalid Quantity', 'Quantity must be a positive number.');
+            return;
+        };
+        const result = await postData(`${API_URL}/api/shopping-lists/list/${listId}/item/add`,{ name, quantity: quantityNum },token);
+        if(result.status){
+            setName('');
+            setQuantity('');
+            setshowItemForm(false);
+            await handleFetchList();
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("Item could not be added", result?.result?.error || "Try again");
+        };
+    };
+
+    const handleDeleteItem = async(itemId)=>{
+        if (!itemId) {
+            Alert.alert('Error Deleting Item', '');
+            return;
+        };
+        const result = await deleteData(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}`,token);
+        if(result.status){
+            await handleFetchList();
+        }else{
+            console.log(result?.result?.error);
+            Alert.alert("Item could not be deleted", result?.result?.error || "Try again");
+        };
+    };
+
+    const handleUpdateItem = async (itemId,quantity)=>{
+        try {
+            const quantityNum = parseInt(quantity);
+            if (!itemId) {
+              Alert.alert("Error", "Item Id missing");
+              return;
+            }
+            if (quantityNum <= 0) {
+              Alert.alert("Error", "Quantity can not be zero");
+              return;
+            }
+            const result = await putData(`${API_URL}/api/shopping-lists/list/${listId}/item/update`,{ itemId, quantity: quantityNum },token)
+            if(result?.status){
+                await handleFetchList()
+            }else{
+              console.log(result?.result?.error);
+              Alert.alert("Quantity update", "Failed, Try again");
+            };
+        } catch (err) {
+          console.log(err)
+          Alert.alert("Quantity update", err || "Try again");
+        }
+    };
+
+    const priceFetcherApi=async(itemName)=>{
+        const url = `https://real-time-amazon-data.p.rapidapi.com/search?query=${itemName}&page=1&country=US&sort_by=RELEVANCE&product_condition=ALL&is_prime=false&deals_and_discounts=NONE`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'x-rapidapi-key': '8bb0b33c9fmsh5db3bc8c9645717p107dfdjsna5195e6d6c9e',
+                'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com'
+            }
+        };
+
+        try {
+            const response = await fetch(url, options);
+            let result = await response.text();
+            result = JSON.parse(result);
+            // console.log('products',result?.data?.products);
+            result = result?.data?.products?.map((product)=>{
+                let price = product?.product_price?.split('')
+                price?.splice(0, 1);
+                console.log(price)
+                price = price?.join('');
+                console.log(price)
+                return({
+                    name: product?.product_title || itemName,
+                    price: price || 0,
+                    currency: "ILS",
+                    storeName: product?.asin || "Trader Joe's",
+                    image: product?.product_photo || "https://via.placeholder.com/50?text=TraderJoes",
+                })
+            });
+            console.log(result);
+            setmockPriceOptions(result);
+        } catch (error) {
+            console.log(error);
+        }
     }
-  }
   
-  const handleUpdateItemPrice = (itemId,storeName,price,currency='ILS')=>{
-    if(!itemId) return console.log('No Item Id found',itemId,storeName,price)
-    console.log('Item Id found',itemId,storeName,price)
-    patchItemInList({
-      storeName,
-      price,
-      currency
-    },`/${itemId}/price`).then((res)=>{
-      closePopup()
-      shoppingListRefetch()
-    });
-  } 
+    const handleUpdateItemPrice = async(itemId,storeName,price,currency='ILS')=>{
+        if(!itemId) return console.log('No Item Id found',itemId,storeName,price)
+        console.log('Item Id found',itemId,storeName,price);
+        try {
+            if (!itemId) {
+              Alert.alert("Error", "Item Id missing");
+              return;
+            };
+            const result = await patchData(`${API_URL}/api/shopping-lists/list/${listId}/item/${itemId}/price`,{ itemId, storeName, price, currency },token)
+            if(result?.status){
+                await handleFetchList()
+                closePopup()
+            }else{
+              console.log(result?.result?.error);
+              Alert.alert("Quantity update", "Failed, Try again");
+            };
+        } catch (err) {
+          console.log(err)
+          Alert.alert("Quantity update", err || "Try again");
+        }
+    };
 
   return (
     <SafeAreaView style={styles.container}>
