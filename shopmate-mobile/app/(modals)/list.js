@@ -9,6 +9,44 @@ import ModalPopup from '@/components/ModalPopup';
 import { postData, putData, fetchData, deleteData, patchData } from '@/constants/apiInstance.js';
 import { useAuth } from '@/contexts/AuthContext';
 
+const mockStoreOptions = [
+  {
+    name: 'Kessler, Wuckert and Wunsch',
+    location: 'israel',
+    distanceto: 1,
+    basketTotal: 4500,
+    image: "https://m.media-amazon.com/images/I/91zN7bvgG+L._AC_UL960_FMwebp_QL65_.jpg"
+  },
+  {
+    name: 'B0DRTFWL4L',
+    location: 'israel',
+    distanceto: 1.5,
+    basketTotal: 5000,
+    image: "https://m.media-amazon.com/images/I/71L4GipPANL._AC_UL960_FMwebp_QL65_.jpg"
+  },
+  {
+    name: 'Kessler, Wuckert and Wunsch',
+    location: 'israel',
+    distanceto: 1.6,
+    basketTotal: 8000,
+    image: 'https://m.media-amazon.com/images/I/815Aquze3SL._AC_UL960_FMwebp_QL65_.jpg'
+  },
+  {
+    name: 'Kessler, Wuckert and Wunsch',
+    location: 'israel',
+    distanceto: 2.0,
+    basketTotal: 9000,
+    image: 'https://m.media-amazon.com/images/I/815Aquze3SL._AC_UL960_FMwebp_QL65_.jpg'
+  },
+  {
+    name: 'Kessler, Wuckert and Wunsch',
+    location: 'israel',
+    distanceto: 3.0,
+    basketTotal: 4000,
+    image: 'https://m.media-amazon.com/images/I/815Aquze3SL._AC_UL960_FMwebp_QL65_.jpg'
+  },
+]
+
 export default function ModalScreen() {
     const { listId } = useLocalSearchParams();
     const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +55,16 @@ export default function ModalScreen() {
     const [visible, setVisible] = useState(false);
     const [visibleItem, setVisibleItem] = useState(null);
     const [mockPriceOptions, setmockPriceOptions] = useState([]);
+    const [mockStore, setmockStore] = useState({
+        name: 'Kessler, Wuckert and Wunsch',
+        location: 'israel',
+        distanceto: 1,
+        basketTotal: 4500,
+        image: 'https://m.media-amazon.com/images/I/815Aquze3SL._AC_UL960_FMwebp_QL65_.jpg'
+      });
     const { token } = useAuth();
+
+    const [storevisibleModal, setstoreVisibleModal] = useState(false);
 
     const openPopup = (item) => {
         setVisible(true);
@@ -29,6 +76,14 @@ export default function ModalScreen() {
         setVisible(false);
         setVisibleItem(null)
         setmockPriceOptions([])
+    }
+
+    const openStorePopup = () => {
+      setstoreVisibleModal(true);
+    }
+
+    const closeStorePopup = () => {
+      setstoreVisibleModal(false);
     }
 
     useEffect(()=>{
@@ -194,9 +249,13 @@ export default function ModalScreen() {
         }
     };
 
+    const handleUpdateBasketStore = (store)=>{
+      setmockStore(store)
+      closeStorePopup()
+    }
+
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.row}>
         <Text style={styles.title}>{shoppingList?.name}</Text>
         <View style={styles.row}>
@@ -209,6 +268,21 @@ export default function ModalScreen() {
         </View>
       </View>
       <Text style={styles.description}>{shoppingList?.description}</Text>
+      <View style={styles.storeContainer}>
+        <View style={styles.row}>
+          <Text style={styles.title}>@ {mockStore?.name}</Text>
+          <Text style={styles.basketTotalPrice}> ILS {mockStore?.basketTotal} </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.description}>Location</Text>
+          <Text style={styles.description}>{mockStore?.location}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.description}>Distance to store</Text>
+          <Text style={styles.description}>{mockStore?.distanceto} mil</Text>
+        </View>
+        <Text style={styles.actionText} onPress={()=>openStorePopup()}>Compare stores</Text>
+      </View>
 
       <View style={styles.searchRow}>
         <TextInput
@@ -301,9 +375,9 @@ export default function ModalScreen() {
                 <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleDeleteItem(item?._id)}>
                   <Text style={styles.removeButtonText}>remove</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.compareButton} onPress={()=>openPopup(item)}>
+                {/* <TouchableOpacity style={styles.compareButton} onPress={()=>openPopup(item)}>
                   <Text style={styles.compareButtonText}>compare prices</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           </View>
@@ -332,6 +406,34 @@ export default function ModalScreen() {
                   {option.currency} {option.price}
                 </Text>
                 <Text style={styles.storeName}>@ {option.storeName}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ModalPopup>
+      <ModalPopup
+        isVisible={storevisibleModal}
+        transparent={true}
+        dismiss={closeStorePopup}
+        title={`Compare stores`}
+      >
+        <ScrollView contentContainerStyle={styles.priceList}>
+          {mockStoreOptions?.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.priceCard}
+              onPress={() => handleUpdateBasketStore(option)}
+            >
+              <Image
+                source={{ uri: option.image || 'https://via.placeholder.com/50' }}
+                style={styles.itemImage}
+              />
+              <View style={styles.priceInfo}>
+                <Text style={styles.itemName}>{option?.name}</Text>
+                <Text style={styles.itemPrice}>
+                  ILS {option.basketTotal}
+                </Text>
+                <Text style={styles.storeName}>@ {option.location} - {option.distanceto} miles</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -510,6 +612,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  actionText: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   compareButton: {
     backgroundColor: Colors.light.primary,
     borderRadius: 8,
@@ -577,5 +684,17 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  storeContainer:{
+    marginVertical: 10,
+    borderWidth: 1,
+    padding: 8,
+    borderRadius: 8,
+    borderColor: Colors.light.secondary
+  },
+  basketTotalPrice: {
+    fontSize: 14,
+    color: Colors.light.secondary,
+    fontWeight: '500'
   },
 });

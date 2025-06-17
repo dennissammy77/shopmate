@@ -16,53 +16,45 @@ export default function CartScreen() {
   const params = useLocalSearchParams();
   const [listId, setlistId] = useState(params.listId);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterQuery, setfilterQuery] = useState('pending');
   const [shoppingList, setShoppingList] = useState({});
   const [filteredItems, setFilteredItems] = useState([]);
   const { token } = useAuth();
   
-  //console.log(listId)
   let { data: shoppingListFetched, loading: shoppingListLoading, error: shoppingListError, refetch: shoppingListRefetch } = useFetch(`${API_URL}/api/shopping-lists/list/${listId}`);
-//  const { data: putedData, putData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/update`);
-//  const { data: purchaseData, putData: putPurchaseData } = usePut(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`);
   const { data: recommendshoppingList, loading: recommendshoppingListLoading, error: recommendshoppingListError, postData: recommendShoppingListPosted} = usePost(`${API_URL}/api/households/recommend/list`);
 
-//  useEffect(()=>{
-//    setShoppingList(shoppingListFetched);
-//    console.log('items',shoppingListFetched?.items)
-//    if (searchQuery.trim() === '') {
-//      setFilteredItems(shoppingListFetched?.items || []);
-//    } else {
-//      const query = searchQuery.toLowerCase();
-//      const filtered = shoppingListFetched?.items.filter(item =>
-//        item?.name?.toLowerCase().includes(query)
-//      );
-//      setFilteredItems(filtered);
-//    }
-//  },[searchQuery,shoppingListFetched,recommendshoppingList,listId]);
     useEffect(()=>{
       handleFetchList()
-    },[searchQuery,listId]);
+    },[searchQuery,listId,filterQuery]);
 
     const handleFetchList = async()=>{
         if (!listId) return;
-        const result = await fetchData(`${API_URL}/api/shopping-lists/list/${listId}`,token);
+        const result = await fetchData(`${API_URL}/api/shopping-lists/list/${listId}?status=${filterQuery}`,token);
         console.log(result)
         if(result.status){
             setShoppingList(result?.result);
             console.log('items',result?.result?.items)
             if (searchQuery.trim() === '') {
-                setFilteredItems(result?.result?.items || []);
+                setFilteredItems(result?.result?.items.filter(item => item?.status.includes(filterQuery)) || []);
             } else {
                 const query = searchQuery.toLowerCase();
                 const filtered = result?.result?.items.filter(item =>
                     item?.name?.toLowerCase().includes(query)
                 );
-                setFilteredItems(filtered);
+                setFilteredItems(filtered.filter(item => item?.status.includes(filterQuery)));
             }
         }else{
             console.log(result?.result?.error);
             Alert.alert("Items could not be retrieved", result?.result?.error || "Try again");
         };
+    };
+    const handleFilterByStatus=()=>{
+      if(filterQuery == 'pending'){
+        setfilterQuery('purchased')
+      }else{
+        setfilterQuery('pending')
+      }
     };
 
     const handlePurchaseItem = async(itemId)=>{
@@ -72,6 +64,22 @@ export default function CartScreen() {
             return;
           }
           const result = await putData(`${API_URL}/api/shopping-lists/list/${listId}/item/purchase`,{ itemId },token)
+          if(result?.status){
+              await handleFetchList()
+          }else{
+            console.log(result?.result?.error);
+          };
+      } catch (err) {
+        console.log(err)
+      }
+    };
+    const handleReturnItem = async(itemId)=>{
+        try {
+          if (!itemId) {
+            Alert.alert("Error", "Item Id missing");
+            return;
+          }
+          const result = await putData(`${API_URL}/api/shopping-lists/list/${listId}/item/update`,{ itemId, status: 'pending' },token)
           if(result?.status){
               await handleFetchList()
           }else{
@@ -109,6 +117,7 @@ export default function CartScreen() {
             Alert.alert("Quantity update", err || "Try again");
         }
     };
+
 
     const handleRecommendList = async()=>{
         const result = await postData(`${API_URL}/api/households/recommend/list`,{},token);
@@ -159,8 +168,11 @@ export default function CartScreen() {
       <View style={styles.row}>
         <Text style={styles.title}>Cart</Text>
         <View style={styles.row}>
+          <TouchableOpacity style={styles.filterButtonIcon} onPress={()=>handleFilterByStatus()}>
+            <Text style={styles.removeButtonText}>view {filterQuery == 'pending' ? 'purchased': 'pending'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.removeButtonIcon} onPress={()=>handleClearCart()}>
-            <Text style={styles.removeButtonText}>Clear</Text>
+            <Text style={styles.removeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -225,7 +237,11 @@ export default function CartScreen() {
                 <TouchableOpacity style={styles.controlButton} onPress={()=>{handleUpdateItem(item?._id, item?.quantity + 1,item.status)}}>
                   <Text style={styles.controlText}>+</Text>
                 </TouchableOpacity>
-                {item.status === 'purchased'? '' :
+                {item.status === 'purchased'?
+                    <TouchableOpacity style={styles.returnButtonIcon} onPress={()=>handleReturnItem(item?._id)}>
+                      <Text style={styles.returnButtonText}>Return</Text>
+                    </TouchableOpacity>
+                    :
                     <TouchableOpacity style={styles.purchaseButtonIcon} onPress={()=>handlePurchaseItem(item?._id)}>
                       <Text style={styles.purchaseButtonText}>purchase</Text>
                     </TouchableOpacity>
@@ -357,8 +373,20 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginTop: 4,
   },
+  returnButtonIcon: {
+    padding: 6,
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 6,
+    marginLeft: 8,
+    marginTop: 4,
+  },
   purchaseButtonText: {
     color: Colors.light.secondary,
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  returnButtonText: {
+    color: Colors.light.primary,
     fontWeight: 'bold',
     fontSize: 12,
   },
@@ -395,6 +423,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginHorizontal: 6,
+  },
+  filterButtonIcon: {
+    backgroundColor: Colors.light.secondary,
+    padding: 6,
+    borderRadius: 6,
+    marginHorizontal: 2,
+    color: Colors.light.primary
   },
   removeButtonIcon: {
     backgroundColor: '#ef4444',
