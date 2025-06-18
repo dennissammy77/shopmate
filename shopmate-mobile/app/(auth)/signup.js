@@ -26,7 +26,7 @@ export default function SignUp() {
 
           const result = await postData(`${API_URL}/api/auth/signup`,{ name, email, password },null);
           console.log('response',result)
-          if(result.status){
+          if(result?.status){
               const { token, user } = result?.result;
               console.log('token',token)
               console.log('user',user)
