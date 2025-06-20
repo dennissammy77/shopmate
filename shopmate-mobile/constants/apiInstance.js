@@ -108,16 +108,21 @@
 //};
 //
 import axios from 'axios';
+const api = axios.create({
+  baseURL: 'https://your-api.com',
+  timeout: 10000,
+});
 
 const getHeaders = (token) => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${token?.current}`,
+  'Connection': 'close',
 });
 
 export const postData = async (url, body, token) => {
   console.log('fired up');
   try {
-    const response = await axios.post(url, body, {
+    const response = await api.post(url, body, {
       headers: getHeaders(token),
     });
     console.log('post hook response', response.data);
