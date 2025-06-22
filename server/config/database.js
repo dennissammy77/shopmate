@@ -5,7 +5,7 @@ const LOGGER = require("../lib/LOGGER.lib.js");
 const username = encodeURIComponent(process.env.MONGO_URI_DEV_USERNAME);
 const password = encodeURIComponent(process.env.MONGO_URI_DEV_PASSWORD);
 const connection_endpoint = process.env.MONGO_URI_DEV_CONNECTION_ENDPOINT
-const connectionString = MONGO_URI_DEV_LOCAL || `mongodb+srv://${username}:${password}@${connection_endpoint}`;
+const connectionString = process.env.MONGO_URI_DEV_LOCAL || `mongodb+srv://${username}:${password}@${connection_endpoint}`;
 
 exports.connect=()=>{
 	mongoose.connect(connectionString).then(()=>{
