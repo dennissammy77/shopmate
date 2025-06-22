@@ -84,7 +84,7 @@ const ProfileScreen = () => {
         Alert.alert("Error", "Please enter a valid household Id");
         return;
       };
-      const result = await postData(`${API_URL}/api/households/${householdIdInvite}/join`, null , token);
+      const result = await postData(`${API_URL}/api/households/${householdIdInvite}/join`, { body: null } , token);
       console.log('response',result)
       if(result.status){
           refetch()
